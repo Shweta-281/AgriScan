@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
+from django.contrib import messages
 from .forms import CustomUserCreationForm
 
 def register(request):
@@ -10,9 +11,12 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Automatically log the user in after registering
             login(request, user)
+            messages.success(request, "Account created successfully!")
             return redirect('home')
+        else:
+            # THIS PRINTS THE EXACT ERROR IN YOUR TERMINAL
+            print("REGISTRATION FAILED:", form.errors) 
     else:
         form = CustomUserCreationForm()
         

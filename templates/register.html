@@ -54,25 +54,44 @@
         <p class="subtitle">Fill in your details to get started.</p>
         
         <form method="post">
-            {% csrf_token %}
-            {% for field in form %}
-            <div class="input-group">
-                <label>{{ field.label }}</label>
-                {% if 'username' in field.name %}<i class="bi bi-person"></i>
-                {% elif 'email' in field.name %}<i class="bi bi-envelope"></i>
-                {% elif 'password' in field.name %}<i class="bi bi-lock"></i>
-                {% else %}<i class="bi bi-card-text"></i>{% endif %}
-                
-                {{ field }}
-                
-                {% if field.help_text %}
-                    <small style="color: #888; font-size: 11px; display: block; margin-top: 4px;">{{ field.help_text }}</small>
-                {% endif %}
-            </div>
+    {% csrf_token %}
+    
+    <!-- SHOW NON-FIELD ERRORS -->
+    {% if form.non_field_errors %}
+        <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+            {% for error in form.non_field_errors %}
+                <p style="color: #991B1B; margin: 0; font-size: 13px; font-weight: 600;">{{ error }}</p>
             {% endfor %}
-            
-            <button type="submit" class="btn-auth">Create Account →</button>
-        </form>
+        </div>
+    {% endif %}
+
+    {% for field in form %}
+    <div class="input-group">
+        <label>{{ field.label }}</label>
+        
+        <!-- Add icons based on the field name -->
+        {% if 'username' in field.name %}<i class="bi bi-person"></i>
+        {% elif 'email' in field.name %}<i class="bi bi-envelope"></i>
+        {% elif 'password' in field.name %}<i class="bi bi-lock"></i>
+        {% else %}<i class="bi bi-card-text"></i>{% endif %}
+        
+        {{ field }}
+        
+        <!-- SHOW FIELD ERRORS HERE -->
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <small style="color: #EF4444; font-size: 12px; display: block; margin-top: 4px; font-weight: 600;">{{ error }}</small>
+            {% endfor %}
+        {% endif %}
+
+        {% if field.help_text %}
+            <small style="color: #888; font-size: 11px; display: block; margin-top: 4px;">{{ field.help_text }}</small>
+        {% endif %}
+    </div>
+    {% endfor %}
+    
+    <button type="submit" class="btn-auth">Create Account →</button>
+</form>
         
         <div class="auth-footer">
             Already have an account? <a href="{% url 'login' %}">Sign In</a>
