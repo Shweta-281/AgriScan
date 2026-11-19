@@ -102,7 +102,8 @@ Run python train_model.py or python fast_train.py.
 7. Run the server:
  
    ```bash
-   python manage.py runserver
+   
+   
    ```
   Open ```http://127.0.0.1:8000``` in your browser.
 
