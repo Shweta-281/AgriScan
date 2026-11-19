@@ -1,8 +1,9 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.views.static import serve  # <--- CORRECT IMPORT for serving media
+
 from accounts.views import register
 from detector.views import custom_logout
 from django.http import HttpResponse
@@ -51,7 +52,7 @@ def setup_live_db(request):
             u.save()
             AgronomistProfile.objects.get_or_create(user=u, defaults={'specialization': e["spec"], 'experience_years': e["exp"], 'consultation_fee': e["fee"]})
 
-                # 5. CREATE DISEASES (All 38 PlantVillage Classes)
+        # 5. CREATE DISEASES (All 38 PlantVillage Classes)
         diseases = [
             ("Apple Scab", "A fungal disease causing olive-green spots.", "Apply fungicides.", "Prune trees."),
             ("Apple Black Rot", "A fungal disease causing frogeye leaf spots.", "Remove infected branches.", "Ensure proper pruning."),
@@ -111,7 +112,7 @@ def setup_live_db(request):
         cat_seeds, _ = Category.objects.get_or_create(name="Seeds")
         cat_tools, _ = Category.objects.get_or_create(name="Farming Tools")
         
-                # 7. CREATE FORUM POSTS & COMMENTS
+        # 7. CREATE FORUM POSTS & COMMENTS
         from community.models import ForumPost, ForumComment
         
         farmer_dev, _ = User.objects.get_or_create(username='farmer_dev', defaults={'role': 'farmer'})
@@ -161,7 +162,7 @@ def setup_live_db(request):
                 defaults={'seller': seller, 'category': cat, 'price': price, 'stock': stock, 'description': desc}
             )
             
-                    # 9. CREATE MARKET PRICES (for the Mandi Widget)
+        # 9. CREATE MARKET PRICES (for the Mandi Widget)
         from detector.models import MarketPrice
         from datetime import date, timedelta
         import random
@@ -169,10 +170,8 @@ def setup_live_db(request):
         crops = ['Wheat', 'Tomato', 'Grapes', 'Potato']
         for crop in crops:
             base_price = random.randint(1500, 2500)
-            # Create data for the last 7 days
             for i in range(7):
                 d = date.today() - timedelta(days=i)
-                # Add random daily variation
                 price = base_price + random.randint(-150, 150) 
                 MarketPrice.objects.get_or_create(crop_name=crop, date=d, defaults={'price_per_quintal': price})
         
@@ -193,4 +192,7 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('register/', register, name='register'),
     path('logout/', custom_logout, name='logout'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    
+    # FIXED: Serve media files using Django's built-in serve function
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]

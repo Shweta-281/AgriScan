@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Admin Data Exports{% endblock %}
+{% block content %}
+
+<style>
+    /* Container to keep everything centered and use full available width */
+    .reports-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    /* Force exactly 3 columns on desktop */
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 24px;
+    }
+
+    /* Tablet view (2 columns) */
+    @media (max-width: 1024px) {
+        .reports-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Mobile view (1 column) */
+    @media (max-width: 768px) {
+        .reports-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Card layout */
+    .export-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .export-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .export-icon {
+        font-size: 32px;
+        margin-bottom: 16px;
+    }
+
+    .export-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1B4332;
+        margin: 0 0 8px 0;
+    }
+
+    .export-desc {
+        color: #64748B;
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 0 0 24px 0;
+        flex-grow: 1; /* Pushes the buttons to the bottom */
+    }
+
+    .export-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: auto;
+    }
+
+    .btn-export {
+        flex: 1;
+        padding: 10px 0;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: 0.2s;
+    }
+
+    .btn-pdf { background: #FEE2E2; color: #DC2626; }
+    .btn-pdf:hover { background: #FCA5A5; color: #991B1B; }
+
+    .btn-excel { background: #DCFCE7; color: #16A34A; }
+    .btn-excel:hover { background: #BBF7D0; color: #166534; }
+</style>
+
+<div class="reports-container">
+    
+    <!-- Page Header -->
+    <div style="margin-bottom: 40px; text-align: center;">
+        <h2 style="font-size: 32px; font-weight: 800; color: #1B4332; margin-bottom: 8px;">📁 Data Exports</h2>
+        <p style="color: #64748B; font-size: 16px; max-width: 600px; margin: 0 auto;">
+            Download AgriScan system reports in PDF or Excel format for offline analysis and record-keeping.
+        </p>
+    </div>
+
+    <!-- The 3-Column Grid -->
+    <div class="reports-grid">
+        
+        <!-- 1. Users -->
+        <div class="export-card" style="border-top: 4px solid #2563EB;">
+            <div class="export-icon">👥</div>
+            <h4 class="export-title">System Users</h4>
+            <p class="export-desc">All registered accounts including Farmers, Agronomists, Sellers, and Admins.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'users' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'users' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-earmark-excel-fill"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 2. Farmer Profiles -->
+        <div class="export-card" style="border-top: 4px solid #16A34A;">
+            <div class="export-icon">🚜</div>
+            <h4 class="export-title">Farmer Profiles</h4>
+            <p class="export-desc">Detailed location, farm size, and soil type data for all registered farmers.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'farmers' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'farmers' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-earmark-excel-fill"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 3. Products -->
+        <div class="export-card" style="border-top: 4px solid #F59E0B;">
+            <div class="export-icon">📦</div>
+            <h4 class="export-title">Product Catalog</h4>
+            <p class="export-desc">All marketplace items, current prices, stock levels, and seller information.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'products' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'products' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-earmark-excel-fill"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 4. Orders -->
+        <div class="export-card" style="border-top: 4px solid #EC4899;">
+            <div class="export-icon">🛒</div>
+            <h4 class="export-title">Marketplace Orders</h4>
+            <p class="export-desc">Complete history of orders placed by farmers, including totals and statuses.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'orders' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'orders' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-earmark-excel-fill"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 5. Disease Catalog -->
+        <div class="export-card" style="border-top: 4px solid #8B5CF6;">
+            <div class="export-icon">🦠</div>
+            <h4 class="export-title">Disease Catalog</h4>
+            <p class="export-desc">The complete knowledge base of diseases, treatments, and prevention methods.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'diseases' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'diseases' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-earmark-excel-fill"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 6. AI Prediction Logs -->
+        <div class="export-card" style="border-top: 4px solid #0EA5E9;">
+            <div class="export-icon">🧠</div>
+            <h4 class="export-title">AI Prediction Logs</h4>
+            <p class="export-desc">History of all crop scans, AI confidence scores, and detected severity levels.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'predictions' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'predictions' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-earmark-excel-fill"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 7. Forum Posts -->
+        <div class="export-card" style="border-top: 4px solid #64748B;">
+            <div class="export-icon">💬</div>
+            <h4 class="export-title">Community Forum</h4>
+            <p class="export-desc">All discussion posts, questions, and answers created by farmers and experts.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'forum' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'forum' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-earmark-excel-fill"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 8. Expert Consultations -->
+        <div class="export-card" style="border-top: 4px solid #D97706;">
+            <div class="export-icon">👨‍🌾</div>
+            <h4 class="export-title">Expert Consultations</h4>
+            <p class="export-desc">Booked sessions between farmers and agronomists, including status and issues.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'consultations' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'consultations' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-earmark-excel-fill"></i> Excel</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -79,6 +79,10 @@ def upload_image(request):
         gradcam_path = os.path.join(settings.MEDIA_ROOT, 'uploads', gradcam_filename)
         heatmap_success = generate_gradcam(file_path, gradcam_path)
         
+        # Double-check if file actually saved
+        if not os.path.exists(gradcam_path):
+            heatmap_success = False
+
         # 5. Clean up string formatting for display
         raw_name = result["top_prediction"]
         if '___' in raw_name:
@@ -109,17 +113,14 @@ def upload_image(request):
             sms_message = f"AgriScan Alert: Your crop has been diagnosed with {clean_name} ({log.confidence}% confidence)."
             send_sms(farmer_phone, sms_message)
         
-                # 8. Fetch Disease Info (BULLETPROOF FALLBACK)
+        # 8. Fetch Disease Info (BULLETPROOF FALLBACK)
         try:
-            # 1. Try exact match
             disease_info = Disease.objects.get(name__iexact=clean_name)
         except Disease.DoesNotExist:
-            # 2. Try a fuzzy match (ignores "(maize)" etc.)
             base_disease = disease if '___' in raw_name else clean_name
             disease_info = Disease.objects.filter(name__icontains=base_disease).first()
             
             if not disease_info:
-                # 3. Absolute Fallback: NEVER show "Information not available"
                 disease_info = Disease(
                     name=clean_name,
                     description=f"The AI detected symptoms matching {clean_name}. Specific agronomic data for this exact class is being updated in our database.",
@@ -136,7 +137,8 @@ def upload_image(request):
             'log': log,
             'disease': disease_info,
             'recommended_products': recommended_products,
-            'gradcam_image': f"/media/uploads/{gradcam_filename}" if heatmap_success else None,
+            'gradcam_image': f"{settings.MEDIA_URL}uploads/{gradcam_filename}" if heatmap_success else None,
+            'original_image_url': log.image.url if log.image else None, # Explicit fix
             'needs_review': result["needs_review"]
         })
         
@@ -151,7 +153,6 @@ def upload_image(request):
         from .models import CropCycle
         active_crops = CropCycle.objects.filter(farmer=request.user, is_active=True)[:3]
     else:
-        # Empty data for anonymous users
         recent_scans = []
         total_scans = 0
         healthy_count = 0
@@ -166,29 +167,24 @@ def upload_image(request):
 
     # --- NEW FEATURE 2: Market Price Logic ---
     market_data = []
-    # Get the 3 most recently updated crops
     unique_crops = MarketPrice.objects.values_list('crop_name', flat=True).distinct()[:3]
     
     for crop in unique_crops:
-        # Get today's price
         latest_price = MarketPrice.objects.filter(crop_name=crop).order_by('-date', '-id').first()
-        # Get 7-day average
         avg_price = MarketPrice.objects.filter(crop_name=crop).aggregate(Avg('price_per_quintal'))['price_per_quintal__avg']
-        
         
         if latest_price and avg_price:
             recommendation = "Hold"
-            color = "#F59E0B" # Orange
-            # Convert Decimal to float for comparison
+            color = "#F59E0B" 
             avg_price_float = float(avg_price) 
             latest_price_float = float(latest_price.price_per_quintal)
             
-            if latest_price_float > avg_price_float * 1.05: # 5% above average
+            if latest_price_float > avg_price_float * 1.05:
                 recommendation = "Sell Now"
-                color = "#10B981" # Green
-            elif latest_price_float < avg_price_float * 0.95: # 5% below average
+                color = "#10B981"
+            elif latest_price_float < avg_price_float * 0.95:
                 recommendation = "Wait"
-                color = "#EF4444" # Red
+                color = "#EF4444"
                 
             market_data.append({
                 'crop': crop,
@@ -206,7 +202,7 @@ def upload_image(request):
         'diseased_count': diseased_count,
         'active_crops': active_crops,
         'weather_alert': weather_alert,
-        'market_data': market_data, # <-- Added to context
+        'market_data': market_data,
     })
 
 
@@ -248,7 +244,7 @@ def scan_detail(request, pk):
     log = get_object_or_404(PredictionLog, id=pk, user=request.user)
     
     # Regenerate the heatmap if it doesn't exist
-    gradcam_filename = f"heatmap_{log.image.name.split('/')[-1]}"
+    gradcam_filename = f"heatmap_{os.path.basename(log.image.name)}"
     gradcam_path = os.path.join(settings.MEDIA_ROOT, 'uploads', gradcam_filename)
     
     if not os.path.exists(gradcam_path) and os.path.exists(log.image.path):
@@ -275,7 +271,8 @@ def scan_detail(request, pk):
         'log': log,
         'disease': disease_info,
         'recommended_products': recommended_products,
-        'gradcam_image': f"/media/uploads/{gradcam_filename}" if heatmap_success else None
+        'gradcam_image': f"{settings.MEDIA_URL}uploads/{gradcam_filename}" if heatmap_success else None,
+        'original_image_url': log.image.url if log.image else None, # Explicit fix
     })
 
 @login_required
@@ -289,7 +286,7 @@ def delete_scan(request, pk):
         if os.path.exists(log.image.path):
             os.remove(log.image.path)
         
-        heatmap_name = f"heatmap_{log.image.name.split('/')[-1]}"
+        heatmap_name = f"heatmap_{os.path.basename(log.image.name)}"
         heatmap_path = os.path.join(settings.MEDIA_ROOT, 'uploads', heatmap_name)
         if os.path.exists(heatmap_path):
             os.remove(heatmap_path)
@@ -343,9 +340,12 @@ def download_report(request, pk):
     elements.append(Spacer(1, 20))
     
     if log.image:
-        img = Image(log.image.path, width=300, height=200)
-        elements.append(img)
-        elements.append(Spacer(1, 20))
+        try:
+            img = Image(log.image.path, width=300, height=200)
+            elements.append(img)
+            elements.append(Spacer(1, 20))
+        except:
+            pass # Skip image if file is missing
         
     data = [
         ['Detected Condition:', log.predicted_disease.replace('_', ' ')],

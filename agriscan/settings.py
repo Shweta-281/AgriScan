@@ -95,7 +95,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ─── MEDIA FILES ───
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# Check if we are on Render, otherwise use the local folder
+if os.environ.get('RENDER'):
+    MEDIA_ROOT = "/opt/render/project/src/media"
+else:
+    MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

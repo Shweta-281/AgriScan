@@ -55,3 +55,98 @@ def weather_dashboard(request):
         'alert': agricultural_alert,
         'city': city
     })
+    
+# analytics/views.py
+import time
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils import timezone
+
+# Import your utilities
+from .utils import export_to_excel, export_to_pdf
+
+# Import all necessary models
+from accounts.models import User, FarmerProfile
+from marketplace.models import Product, Order
+from detector.models import Disease, PredictionLog
+from community.models import ForumPost, ExpertConsultation
+
+
+@staff_member_required
+def export_admin_data(request, data_type, file_format):
+    """Handles generating PDF or Excel for 8 different data types."""
+    timestamp = timezone.now().strftime("%Y%m%d_%H%M")
+    
+    # 1. Users
+    if data_type == 'users':
+        title = "System Users Report"
+        headers = ['Username', 'Full Name', 'Email', 'Role', 'Phone', 'Date Joined']
+        query = User.objects.all().order_by('date_joined')
+        data = [[u.username, u.get_full_name(), u.email, u.role.title(), u.phone or "N/A", u.date_joined.strftime("%Y-%m-%d")] for u in query]
+        
+    # 2. Farmer Profiles
+    elif data_type == 'farmers':
+        title = "Farmer Profiles"
+        headers = ['Username', 'Full Name', 'Location', 'Farm Size (Acres)', 'Soil Type']
+        query = FarmerProfile.objects.select_related('user').all()
+        data = [[f.user.username, f.user.get_full_name(), f.location, f.farm_size_acres, f.soil_type or "N/A"] for f in query]
+        
+    # 3. Products (Marketplace)
+    elif data_type == 'products':
+        title = "Product Catalog"
+        headers = ['ID', 'Name', 'Category', 'Price (₹)', 'Stock', 'Seller']
+        query = Product.objects.select_related('category', 'seller').all()
+        data = [[p.id, p.name, p.category.name, p.price, p.stock, p.seller.username] for p in query]
+        
+    # 4. Orders (Marketplace)
+    elif data_type == 'orders':
+        title = "All Orders"
+        headers = ['Order ID', 'Date', 'Farmer', 'Total Amount (₹)', 'Status']
+        query = Order.objects.select_related('farmer').all().order_by('-created_at')
+        data = [[o.id, o.created_at.strftime("%Y-%m-%d"), o.farmer.username, o.total_amount, o.status] for o in query]
+        
+    # 5. Disease Catalog
+    elif data_type == 'diseases':
+        title = "Disease Knowledge Base"
+        headers = ['Disease Name', 'Description', 'Treatment', 'Prevention']
+        query = Disease.objects.all()
+        data = [[d.name, d.description[:50] + '...', d.treatment[:50] + '...', d.prevention[:50] + '...'] for d in query]
+        
+    # 6. AI Prediction Logs
+    elif data_type == 'predictions':
+        title = "AI Prediction Logs"
+        headers = ['Date', 'Farmer', 'Crop Cycle', 'Predicted Disease', 'Confidence', 'Severity %', 'Review Status']
+        query = PredictionLog.objects.select_related('user', 'crop_cycle').all().order_by('-date_uploaded')
+        data = [[p.date_uploaded.strftime("%Y-%m-%d"), p.user.username, str(p.crop_cycle) if p.crop_cycle else "N/A", p.predicted_disease, f"{p.confidence:.1%}", p.severity, p.review_status.title()] for p in query]
+        
+    # 7. Forum Posts (Community)
+    elif data_type == 'forum':
+        title = "Community Forum Posts"
+        headers = ['Date', 'Author', 'Title', 'Content Snippet']
+        query = ForumPost.objects.select_related('author').all().order_by('-created_at')
+        data = [[p.created_at.strftime("%Y-%m-%d"), p.author.username, p.title, p.content[:40] + '...'] for p in query]
+        
+    # 8. Expert Consultations
+    elif data_type == 'consultations':
+        title = "Expert Consultations"
+        headers = ['Scheduled Time', 'Farmer', 'Agronomist', 'Issue', 'Status']
+        query = ExpertConsultation.objects.select_related('farmer', 'agronomist').all().order_by('-scheduled_time')
+        data = [[c.scheduled_time.strftime("%Y-%m-%d %H:%M"), c.farmer.username, c.agronomist.username, c.issue_description[:40] + '...', c.status.title()] for c in query]
+        
+    else:
+        return redirect('admin_reports')
+
+    # Generate the File
+    filename = f"AgriScan_{data_type}_{timestamp}"
+    
+    if file_format == 'excel':
+        return export_to_excel(headers, data, filename)
+    else:
+        return export_to_pdf(title, headers, data, filename)
+
+
+@staff_member_required
+def admin_reports(request):
+    """Renders the page with the download buttons."""
+    return render(request, 'analytics/admin_reports.html')
