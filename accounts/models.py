@@ -11,11 +11,17 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='farmer')
     phone = models.CharField(max_length=15, blank=True)
 
+    class Meta:
+        db_table = 'users' # <-- Clean table name
+
 class FarmerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='farmer_profile')
     location = models.CharField(max_length=100)
     farm_size_acres = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
     soil_type = models.CharField(max_length=50, blank=True)
+
+    class Meta:
+        db_table = 'farmer_profiles' # <-- Clean table name
 
 class AgronomistProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='agronomist_profile')
@@ -23,11 +29,17 @@ class AgronomistProfile(models.Model):
     experience_years = models.PositiveIntegerField(default=0)
     consultation_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
     
+    class Meta:
+        db_table = 'expert_profiles' # <-- Clean table name
+    
 class SellerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seller_profile')
     store_name = models.CharField(max_length=100)
     gst_number = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
+
+    class Meta:
+        db_table = 'seller_profiles' # <-- Clean table name
 
     def __str__(self):
         return f"{self.store_name} ({self.user.username})"

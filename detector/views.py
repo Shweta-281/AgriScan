@@ -160,15 +160,48 @@ def upload_image(request):
         active_crops = []
 
     top_products = Product.objects.all().order_by('?')[:3] 
-    latest_post = ForumPost.objects.order_by('-id').first()
+    try:
+       latest_post = ForumPost.objects.order_by('-id').first()
+    except Exception as e:
+        latest_post = None
+        print(f"Forum table missing or error: {e}")
     
     # --- NEW FEATURE 1: Weather Alert ---
     weather_alert = get_disease_risk_alert()
 
-    # --- NEW FEATURE 2: Market Price Logic ---
+        # --- NEW FEATURE 2: Market Price Logic (Bulletproof) ---
     market_data = []
-    unique_crops = MarketPrice.objects.values_list('crop_name', flat=True).distinct()[:3]
-    
+    try:
+        # Get unique crop names that have price data
+        unique_crops = MarketPrice.objects.values_list('crop_name', flat=True).distinct()[:3]
+        
+        for crop in unique_crops:
+            latest_price = MarketPrice.objects.filter(crop_name=crop).order_by('-date').first()
+            avg_price = MarketPrice.objects.filter(crop_name=crop).aggregate(Avg('price_per_quintal'))['price_per_quintal__avg']
+            
+            if latest_price and avg_price:
+                recommendation = "Hold"
+                color = "#F59E0B" # Orange
+                
+                avg_price_float = float(avg_price)
+                latest_price_float = float(latest_price.price_per_quintal)
+                
+                if latest_price_float > avg_price_float * 1.05:
+                    recommendation = "Sell Now"
+                    color = "#10B981" # Green
+                elif latest_price_float < avg_price_float * 0.95:
+                    recommendation = "Wait"
+                    color = "#EF4444" # Red
+                    
+                market_data.append({
+                    'crop': crop,
+                    'price': f"{latest_price_float:.0f}",
+                    'recommendation': recommendation,
+                    'color': color
+                })
+    except Exception as e:
+        print(f"Market price error (table probably missing): {e}")
+        
     for crop in unique_crops:
         latest_price = MarketPrice.objects.filter(crop_name=crop).order_by('-date', '-id').first()
         avg_price = MarketPrice.objects.filter(crop_name=crop).aggregate(Avg('price_per_quintal'))['price_per_quintal__avg']

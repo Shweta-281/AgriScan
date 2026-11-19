@@ -16,6 +16,9 @@ class Product(models.Model):
     stock = models.PositiveIntegerField(default=0)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     
+    class Meta:
+        db_table = 'products' # <-- Clean table name
+    
     def __str__(self): 
         return self.name
 
@@ -32,6 +35,9 @@ class Order(models.Model):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     
+    class Meta:
+        db_table = 'orders' # <-- Clean table name
+        
     def __str__(self): 
         return f"Order {self.id}"
 
@@ -47,5 +53,7 @@ class CartItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     
+    class Meta:
+        db_table = 'order_items' # <-- Clean table name
     def total_price(self): 
         return self.product.price * self.quantity

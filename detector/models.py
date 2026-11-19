@@ -7,9 +7,11 @@ class Disease(models.Model):
     description = models.TextField()
     treatment = models.TextField()
     prevention = models.TextField()
-    # NEW FIELDS:
-    dosage_instructions = models.TextField(blank=True, null=True, help_text="Chemical application guidelines")
-    safety_advisory = models.TextField(blank=True, null=True, help_text="Protection for ecosystem")
+    dosage_instructions = models.TextField(blank=True, null=True)
+    safety_advisory = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'diseases' # <-- Clean table name
 
     def __str__(self):
         return self.name
@@ -17,6 +19,9 @@ class Disease(models.Model):
 class Crop(models.Model):
     name = models.CharField(max_length=100)
     season = models.CharField(max_length=50)
+    
+    class Meta:
+        db_table = 'crops' # <-- Clean table name
     def __str__(self): return self.name
 
 class CropCycle(models.Model):
@@ -35,6 +40,9 @@ class MarketPrice(models.Model):
     crop_name = models.CharField(max_length=100)
     price_per_quintal = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'market_prices'
     
     def __str__(self):
         return f"{self.crop_name} - ₹{self.price_per_quintal} on {self.date}"
@@ -63,4 +71,8 @@ class PredictionLog(models.Model):
     chemical_cure = models.TextField(blank=True, null=True)
     prevention_practice = models.TextField(blank=True, null=True)
     
-    def __str__(self): return f"{self.user.username} - {self.predicted_disease}"
+    class Meta:
+        db_table = 'scan_history' # <-- Clean table name
+
+    def __str__(self): 
+        return f"{self.user.username} - {self.predicted_disease}"
