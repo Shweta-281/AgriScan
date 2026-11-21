@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Leaflet Map CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+<!-- Leaflet Geocoder (Search Bar) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<style>
+    .outbreak-container {
+        display: flex;
+        gap: 24px;
+        padding: 24px;
+        max-width: 1600px;
+        margin: 0 auto;
+        height: calc(100vh - 72px);
+    }
+
+    /* --- LEFT: MAP SECTION --- */
+    .map-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-surface);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .map-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-surface);
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .map-header h1 { font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0; }
+    .map-header p { font-size: 14px; color: var(--text-muted); margin: 0; }
+
+    #map { flex: 1; width: 100%; z-index: 1; }
+
+    /* --- FIX LEAFLET SEARCH BAR POSITION & STYLE --- */
+    .leaflet-control-geocoder {
+        position: absolute !important;
+        top: 20px !important;
+        left: 20px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        border: 1px solid var(--border-color) !important;
+        background: var(--bg-surface) !important;
+        z-index: 1000 !important;
+        display: flex;
+        align-items: center;
+        padding: 4px;
+    }
+    .leaflet-control-geocoder-form {
+        display: flex;
+        align-items: center;
+    }
+    .leaflet-control-geocoder-form input {
+        background: transparent !important;
+        color: var(--text-main) !important;
+        border: none !important;
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        width: 220px !important;
+        outline: none !important;
+        font-family: 'Inter', sans-serif;
+    }
+    .leaflet-control-geocoder-icon {
+        background-color: transparent !important;
+        color: var(--text-main) !important;
+        padding: 8px;
+    }
+    /* Hide the ugly white box behind the search icon */
+    .leaflet-control-geocoder-form .leaflet-control-geocoder-icon:hover {
+        background-color: var(--bg-body) !important;
+        border-radius: 4px;
+    }
+
+    /* --- RIGHT: LIVE FEED SECTION --- */
+    .feed-section {
+        width: 420px;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-surface);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .feed-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .feed-header h2 { font-size: 18px; font-weight: 800; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+    
+    .live-dot {
+        width: 8px; height: 8px; background: #EF4444; border-radius: 50%;
+        display: inline-block; animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .feed-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        padding-bottom: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .feed-card {
+        background: var(--bg-body);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: max-content;
+        overflow: visible;
+    }
+    .feed-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    
+    .feed-card::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+        border-top-left-radius: 12px; border-bottom-left-radius: 12px;
+        background: #EF4444; 
+    }
+    .feed-card.medium-risk::before { background: #F59E0B; }
+
+    .feed-disease-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding-left: 8px; }
+    .feed-disease { font-size: 15px; font-weight: 800; color: var(--text-main); line-height: 1.3; word-break: break-word; }
+    
+    .feed-meta { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; padding-left: 8px; }
+    
+    .badge-risk { font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+    .badge-high { background: #FEE2E2; color: #991B1B; }
+    .badge-med { background: #FEF3C7; color: #92400E; }
+
+    /* Map Legend */
+    .map-legend {
+        background: var(--bg-surface);
+        padding: 12px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 1px solid var(--border-color);
+        font-family: 'Inter', sans-serif;
+    }
+    .map-legend h4 { margin: 0 0 8px 0; font-size: 13px; color: var(--text-main); font-weight: 700; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .legend-color { width: 12px; height: 12px; border-radius: 50%; }
+
+    /* Customizing Leaflet Popup */
+    .leaflet-popup-content-wrapper { background: var(--bg-surface); color: var(--text-main); border-radius: 12px; padding: 0; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+    .leaflet-popup-content { margin: 0; padding: 16px; width: 240px !important; font-family: 'Inter', sans-serif; }
+    .leaflet-popup-tip { background: var(--bg-surface); }
+    
+    .popup-title { font-size: 16px; font-weight: 800; color: var(--text-main); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+    .popup-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
+    .popup-label { color: var(--text-muted); }
+    .popup-value { color: var(--text-main); font-weight: 700; }
+
+    @media (max-width: 1024px) {
+        .outbreak-container { flex-direction: column; height: auto; padding: 16px; }
+        .map-section { height: 500px; }
+        .feed-section { width: 100%; height: 400px; }
+    }
+</style>
+
+<div class="outbreak-container">
+    <!-- LEFT: MAP -->
+    <div class="map-section">
+        <div class="map-header">
+            <div>
+                <h1>🌍 Regional Outbreak Map</h1>
+                <p>Real-time disease spread. Type a state in the search bar to locate outbreaks.</p>
+            </div>
+            <!-- Added a counter -->
+            <div style="background: var(--bg-body); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span style="font-weight: 800; color: var(--primary);" id="outbreak-count">0</span>
+                <span style="font-size: 13px; color: var(--text-muted);">Outbreaks Tracked</span>
+            </div>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <!-- RIGHT: LIVE FEED -->
+    <div class="feed-section">
+        <div class="feed-header">
+            <h2><span class="live-dot"></span> Live Outbreak Feed</h2>
+        </div>
+        <div class="feed-content" id="outbreak-feed">
+            <div style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 14px;">Loading recent outbreaks...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Initialize Map
+    const map = L.map('map').setView([21.1458, 79.0882], 5); 
+    
+    // 2. Add Tile Layer
+    const cartoApiKey = 'cb1_5das_1_efc0b54a44c8dd2934b0c800';
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${cartoApiKey}`, {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    // 3. ADD SEARCH BAR (Locked to Top-Left)
+    L.Control.geocoder({
+        position: 'topleft', 
+        defaultMarkGeocode: false,
+        placeholder: "Search state (e.g. Maharashtra)...",
+        geocoder: L.Control.Geocoder.nominatim({
+            geocodingQueryParams: { countrycodes: 'in' } 
+        })
+    })
+    .on('markgeocode', function(e) {
+        var bbox = e.geocode.bbox;
+        var poly = L.polygon([
+             bbox.getSouthEast(),
+             bbox.getNorthEast(),
+             bbox.getNorthWest(),
+             bbox.getSouthWest()
+        ]);
+        map.fitBounds(poly.getBounds());
+    })
+    .addTo(map);
+
+    // 4. Custom Map Legend
+    const legend = L.control({position: 'bottomright'});
+    legend.onAdd = function (map) {
+        const div = L.DomUtil.create('div', 'map-legend');
+        div.innerHTML = `
+            <h4>Disease Risk Level</h4>
+            <div class="legend-item"><div class="legend-color" style="background:#EF4444;"></div> High Risk (Conf &gt; 80%)</div>
+            <div class="legend-item"><div class="legend-color" style="background:#F59E0B;"></div> Moderate Risk</div>
+            <div class="legend-item"><div class="legend-color" style="background:linear-gradient(90deg, blue, yellow, red); border-radius:4px;"></div> Outbreak Heatmap</div>
+        `;
+        return div;
+    };
+    legend.addTo(map);
+
+    // 5. Fetch Data & Render
+    fetch("{% url 'outbreak_data' %}")
+        .then(r => r.json())
+        .then(data => {
+            const heatPoints = [];
+            const feedContainer = document.getElementById('outbreak-feed');
+            feedContainer.innerHTML = ''; 
+
+            // Update Counter
+            document.getElementById('outbreak-count').innerText = data.scans.length;
+
+            if(data.scans.length === 0) {
+                feedContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">No outbreaks reported recently.</div>';
+            }
+
+            data.scans.forEach(scan => {
+                heatPoints.push([scan.lat, scan.lng, scan.confidence / 100]);
+                
+                const isHighRisk = scan.confidence > 80;
+                const riskClass = isHighRisk ? 'badge-high' : 'badge-med';
+                const riskText = isHighRisk ? 'High Risk' : 'Moderate';
+                const cardClass = isHighRisk ? '' : 'medium-risk';
+                const markerColor = isHighRisk ? '#EF4444' : '#F59E0B';
+
+                // --- A. Create Map Marker ---
+                const marker = L.circleMarker([scan.lat, scan.lng], {
+                    radius: 8, color: '#FFFFFF', weight: 2, fillColor: markerColor, fillOpacity: 0.9
+                }).addTo(map);
+
+                marker.bindTooltip(`<b>${scan.disease}</b> (${scan.confidence}%)`, {
+                    direction: 'top', offset: [0, -10], className: 'custom-tooltip'
+                });
+
+                marker.bindPopup(`
+                    <div class="popup-title">${scan.disease}</div>
+                    <div class="popup-row"><span class="popup-label">Reported by:</span><span class="popup-value">${scan.farmer}</span></div>
+                    <div class="popup-row"><span class="popup-label">Date:</span><span class="popup-value">${scan.date || 'Recent'}</span></div>
+                    <div class="popup-row"><span class="popup-label">AI Conf:</span><span class="popup-value" style="color:${markerColor}">${scan.confidence}%</span></div>
+                `);
+
+                // --- B. Create Feed Card on Right ---
+                const card = document.createElement('div');
+                card.className = `feed-card ${cardClass}`;
+                card.innerHTML = `
+                    <div class="feed-disease-row">
+                        <span class="feed-disease">${scan.disease}</span>
+                        <span class="badge-risk ${riskClass}">${riskText}</span>
+                    </div>
+                    <div class="feed-meta">
+                        <i class="bi bi-geo-alt-fill" style="color:${markerColor}"></i> Lat: ${scan.lat.toFixed(2)}, Lng: ${scan.lng.toFixed(2)}
+                    </div>
+                    <div class="feed-meta">
+                        <i class="bi bi-clock"></i> ${scan.date || 'Recently reported'}
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    map.flyTo([scan.lat, scan.lng], 10, { duration: 1.5 });
+                    marker.openPopup();
+                });
+
+                feedContainer.appendChild(card);
+            });
+            
+            // 6. Add Heatmap Layer
+            if(heatPoints.length > 0) {
+                L.heatLayer(heatPoints, { 
+                    radius: 40, blur: 35, maxZoom: 10, 
+                    gradient: {0.4: 'blue', 0.6: 'yellow', 0.8: 'orange', 1: 'red'} 
+                }).addTo(map);
+            }
+        });
+</script>
+
+<style>
+    .custom-tooltip {
+        background: rgba(17, 24, 39, 0.9); color: white; border: none; border-radius: 4px;
+        padding: 4px 8px; font-weight: 600; font-size: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .custom-tooltip::before { border-top-color: rgba(17, 24, 39, 0.9) !important; }
+</style>
+
+{% endblock %}

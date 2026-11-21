@@ -1,7 +1,6 @@
 import json
 from decimal import Decimal
-
-from django.db.models import F, Sum
+from django.db.models import F, Sum, Q
 from django.db.models.fields import DecimalField
 from django.db.models.functions import Coalesce
 from django.shortcuts import render, redirect, get_object_or_404
@@ -15,10 +14,24 @@ from .models import Product, Category, CartItem, Order, OrderItem
 def store(request):
     products = Product.objects.all()
     categories = Category.objects.all()
+    
+    # Handles the ?search=DiseaseName from the result page
+    search_query = request.GET.get('search')
+    if search_query:
+        products = products.filter(
+            Q(name__icontains=search_query) | 
+            Q(description__icontains=search_query)
+        )
+        
     category_id = request.GET.get('category')
     if category_id:
         products = products.filter(category_id=category_id)
-    return render(request, 'marketplace/store.html', {'products': products, 'categories': categories})
+        
+    return render(request, 'marketplace/store.html', {
+        'products': products, 
+        'categories': categories,
+        'search_query': search_query
+    })
 
 @login_required
 def add_to_cart(request, product_id):
@@ -72,15 +85,12 @@ def process_payment(request):
 
     total = sum(item.total_price() for item in cart_items)
     
-    # 1. Create the Order (FIXED: Explicitly setting status to 'Processing')
-    # If your model doesn't have 'Processing', use 'Completed' or whatever choice you have.
     order = Order.objects.create(
         farmer=request.user, 
         total_amount=total,
         status='Processing' 
     )
     
-    # 2. Move Cart items to Order Items & Reduce Stock
     sellers = set()
     for item in cart_items:
         OrderItem.objects.create(
@@ -89,17 +99,12 @@ def process_payment(request):
             quantity=item.quantity, 
             price=item.product.price
         )
-        # Reduce stock safely
         item.product.stock -= item.quantity
         item.product.save()
-        
-        # Collect sellers for SMS
         sellers.add(item.product.seller)
         
-    # 3. Clear the Cart
     cart_items.delete()
     
-    # 4. Send SMS Notifications
     if request.user.phone:
         send_sms(request.user.phone, f"AgriScan: Your payment of ₹{total} for Order #{order.id} was successful. Thank you!")
         
@@ -107,8 +112,6 @@ def process_payment(request):
         if seller.phone:
             send_sms(seller.phone, f"AgriScan Seller Alert: You have a new order (#{order.id}). Please check your dashboard.")
             
-    # 5. Redirect to Success Page
-    # Note: Make sure your template is named 'payment_success.html' or 'success.html' to match this.
     return render(request, 'marketplace/payment_success.html', {'order': order})
 
 @login_required
@@ -119,13 +122,11 @@ def seller_dashboard(request):
     products = Product.objects.filter(seller=request.user)
     order_items = OrderItem.objects.filter(product__seller=request.user).order_by('-order__created_at')
     
-    # 1. Calculate Total Revenue
     revenue_data = order_items.aggregate(
         total_revenue=Coalesce(Sum(F('quantity') * F('price'), output_field=DecimalField()), Decimal('0.00'))
     )
     total_revenue = revenue_data['total_revenue']
 
-    # 2. Find Top Selling Products (for Chart.js)
     top_products = order_items.values('product__name').annotate(
         total_sold=Sum('quantity')
     ).order_by('-total_sold')[:5]
@@ -133,7 +134,6 @@ def seller_dashboard(request):
     chart_labels = [item['product__name'] for item in top_products]
     chart_data = [item['total_sold'] for item in top_products]
 
-    # 3. Find Low Stock Alerts
     low_stock_products = products.filter(stock__lt=10)
 
     context = {
@@ -145,7 +145,6 @@ def seller_dashboard(request):
         'chart_data': json.dumps(chart_data),
     }
     return render(request, 'marketplace/seller_dashboard.html', context)
-
 
 @login_required
 def add_product(request):
@@ -170,8 +169,6 @@ def order_history(request):
     if request.user.role != 'farmer':
         return redirect('home')
         
-    # Fetch orders for the logged-in user, newest first
-    # FIXED: We use prefetch_related to ensure the items load efficiently so they show up in the template
     orders = Order.objects.filter(farmer=request.user).prefetch_related('items').order_by('-created_at')
     
     return render(request, 'marketplace/order_history.html', {'orders': orders})

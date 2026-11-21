@@ -2,15 +2,16 @@ from django import forms
 from .models import CropCycle
 
 class CropCycleForm(forms.ModelForm):
+    # Add a text field for the crop name
+    crop_name = forms.CharField(
+        max_length=100, 
+        label="Crop Name",
+        widget=forms.TextInput(attrs={'placeholder': 'e.g. Wheat, Tomato, Cotton'})
+    )
+
     class Meta:
         model = CropCycle
-        fields = ['crop', 'sowing_date']
+        fields = ['sowing_date']
         widgets = {
-            'sowing_date': forms.DateInput(attrs={
-                'type': 'date', 
-                'style': 'width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-family: Inter; box-sizing: border-box;'
-            }),
-            'crop': forms.Select(attrs={
-                'style': 'width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-family: Inter; box-sizing: border-box;'
-            })
+            'sowing_date': forms.DateInput(attrs={'type': 'date'}),
         }

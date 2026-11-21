@@ -1,135 +1,131 @@
-# 🌱 AgriScan - AI-Powered Agricultural Ecosystem
+# 🌱 AgriScan | Smart Farming & Crop Disease Detection
 
-![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
-![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Django](https://img.shields.io/badge/Django-5.0-green)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-orange)
+![License](https://img.shields.io/badge/License-MIT-brightgreen)
 
-AgriScan is a comprehensive, full-stack **MCA Major Project** designed to empower farmers with Artificial Intelligence. It is not just an AI scanner; it is a complete agricultural ecosystem that includes disease detection, expert consultations, an e-commerce marketplace, and real-time weather alerts.
+**AgriScan** is a comprehensive, AI-powered agricultural companion designed to help farmers instantly detect crop diseases, receive verified expert agronomic advice, and monitor regional outbreak trends.
+
+Built as a Major Project, this platform bridges the gap between advanced Machine Learning and practical, real-world farming.
+
+---
 
 ## ✨ Key Features
 
-### 🧑‍🌾 Farmer Portal
-
-- **AI Disease Detection:** Upload a leaf image, and a trained TensorFlow (MobileNetV2) model will diagnose the disease.
-- **Explainable AI (Grad-CAM):** Generates a visual heatmap highlighting the exact spots on the leaf that triggered the AI's diagnosis, building user trust.
-- **Severity Assessment:** Analyzes and displays the percentage of the leaf surface affected by the disease.
-- **AI Agronomist Chatbot:** A floating conversational agent to answer quick follow-up questions about dosages, weather, or treatments.
-- **Smart E-Commerce:** Buy recommended fertilizers and pesticides through a fully functional marketplace with a mock payment gateway and SMS receipts.
-- **Expert Consultations:** Book 1-on-1 video calls with certified agronomists.
-- **Community Forum:** Ask questions and share knowledge with other farmers.
-- **Weather Alerts:** Integrated with OpenWeatherMap to warn farmers about high humidity or heatwaves that accelerate disease spread.
-
-### 👨‍🔬 Expert (Agronomist) Portal
-
-- **Case Escalation Inbox:** A triage dashboard showing cases where AI confidence dropped below 70%.
-- **Diagnostic Interface:** Side-by-side view of the farmer's uploaded image, the AI Heatmap, and environmental metadata (Soil pH, humidity, etc.).
-- **Digital Prescription Pad:** Experts can write confirmed diagnoses, organic cures, chemical cures, and preventative practices.
-- **Tele-medicine:** Integrated Jitsi Meet for live video consultations.
-
-### 🏪 Seller Portal
-
-- **Analytics Dashboard:** Visual revenue tracking, top-selling products chart (Chart.js), and low-stock alerts.
-- **Inventory Management:** Add, update, and track products in the marketplace.
-
-### 🛡️ Admin Portal
-
-- **Platform Analytics:** Bird's-eye view of total AI scans, registered users, and orders, with a Chart.js graph of the most detected diseases.
-- **Django Admin:** Complete control over 16+ database tables.
+*   📸 **Instant Disease Detection:** Upload a photo or use the built-in webcam to scan crop leaves.
+*   🧠 **Explainable AI (Grad-CAM):** Generates a heatmap overlay on the leaf to show *exactly* where the AI detected the disease symptoms.
+*   👨‍⚕️ **Expert Triage System:** Low-confidence AI scans are escalated to an Agronomist Dashboard. Experts can review the scan and send a verified, digital prescription (Organic & Chemical cures) back to the farmer.
+*   🗺️ **Regional Outbreak Map:** Interactive map (Leaflet.js) with heatmaps and live feeds showing disease spread across different states.
+*   ☁️ **Weather & Disease Risk Alerts:** Integrates local weather data to warn farmers about high-risk conditions for fungal outbreaks.
+*   📊 **Yield & Revenue Forecasting:** Estimates crop yield and potential revenue based on the farm's health score and active crop cycles.
+*   🌾 **Farmer Community Forum:** A social space for farmers to ask questions, share experiences, and help each other.
+*   🌙 **Modern UI & Dark Mode:** A fully responsive, professional dashboard with native Dark Mode support.
 
 ---
 
-## 💻 Tech Stack
+## 🛠️ Tech Stack
 
-- **Backend:** Python 3, Django 5/6
-- **Machine Learning:** TensorFlow, Keras (MobileNetV2), NumPy
-- **Computer Vision:** OpenCV (for Grad-CAM heatmap generation)
-- **Frontend:** HTML5, CSS3, JavaScript, Bootstrap 5, Chart.js
-- **Database:** SQLite (Development)
-- **Third-Party APIs:** OpenWeatherMap (Weather), Jitsi Meet (Video Calls), ReportLab (PDF Generation)
+**Backend:**
+*   **Framework:** Django (Python)
+*   **Database:** SQLite (Development)
+*   **Authentication:** Django Auth with custom User Roles (Farmer, Agronomist, Admin)
 
----
+**Machine Learning:**
+*   **Model:** TensorFlow / Keras (Transfer Learning using MobileNetV2/ResNet)
+*   **Libraries:** OpenCV, NumPy, Grad-CAM
+*   **Dataset:** PlantVillage (38 classes of healthy and diseased crops)
 
-## 🚀 Local Installation Guide
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/your-username/agriscan.git
-   cd agriscan
-
-   ```
-
-2. **Create a virtual environment:**
-
-   ```bash
-   python -m venv venv
-   # Windows
-   venv\Scripts\activate
-   # Mac/Linux
-   source venv/bin/activate
-
-   ```
-
-3. **Install dependencies:**
-
-   ```bash
-   pip install -r requirements.txt
-
-   ```
-
-4. **Set up the database:**
-
-   ```bash
-    python manage.py makemigrations
-    python manage.py migrate
-
-   ```
-
-5. **Train the AI Model(Optional - if ```crop_disease_model.h5``` is not present):**
-Download the PlantVillage dataset from Kaggle.
-
-Place the color folder in the root directory and rename it to PlantVillage.
-
-Run python train_model.py or python fast_train.py.
-
-6. **Seed the Database(Populate with dummy products and experts):**
-  
-   ```bash
-   python manage.py shell
-   # Run the provided seed scripts for experts, products, and diseases.
-   ```
-7. Run the server:
- 
-   ```bash
-   
-   
-   ```
-  Open ```http://127.0.0.1:8000``` in your browser.
-
-  ---
-
-## 🔑 Demo Credentials
-
-To test the different roles of the platform, use the following accounts. *(Password for all test accounts is `pass12345`)*.
-
-| Role | Username | Password | Key Features to Test |
-| :--- | :--- | :--- | :--- |
-| 🧑‍🌾 **Farmer** | `farmer_raj` | `pass12345` | Scan leaves, view heatmaps, buy products, book experts. |
-| 👨‍🔬 **Agronomist** | `dr_smith` | `pass12345` | Review escalated AI cases, write digital prescriptions. |
-| 🏪 **Seller** | `seller1` | `pass12345` | View revenue charts, manage product inventory. |
-| 🛡️ **Admin** | `admin` | `pass12345` | View platform analytics, access Django Admin. |
-
----
----
-
-## 🧠 How the AI Works
-
-1. **Transfer Learning:** We use a pre-trained **MobileNetV2** base model, fine-tuned on the PlantVillage dataset (54,000+ images across 38 classes).
-2. **Grad-CAM (Explainable AI):** When an image is classified, the gradients of the target class are computed with respect to the final convolutional layer. This generates a heatmap showing which pixels (e.g., brown spots) contributed most to the prediction, building farmer trust.
-3. **Fallback Mechanism:** 
-   - If the AI confidence is **below 60%**, the system flags it as an "Unknown" image to prevent false positives.
-   - If it is between **60% and 70%**, the system automatically escalates the case to a human expert via the **Triage Inbox**.
+**Frontend:**
+*   HTML5, CSS3 (Custom variables for theming), JavaScript
+*   Bootstrap Icons
+*   Leaflet.js (Interactive Maps & Heatmaps)
 
 ---
 
+## 🚀 Getting Started
+
+Follow these steps to run the project locally on your machine.
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/AgriScan.git
+cd AgriScan
+```
+
+### 2. Set Up Virtual Environment
+```bash
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# Mac/Linux:
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+*(Make sure your `requirements.txt` includes `django`, `tensorflow`, `opencv-python`, `pillow`, `reportlab`, and `requests`)*
+
+### 4. Add the AI Model
+Ensure your trained model file (`crop_disease_model.h5`) and `class_names.txt` are placed in the root directory of the project.
+
+### 5. Apply Migrations
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### 6. Create an Admin Account
+```bash
+python manage.py createsuperuser
+```
+
+### 7. Run the Server
+```bash
+python manage.py runserver
+```
+Open your browser and navigate to http://127.0.0.1:8000/.
+
+---
+
+## 📂 Project Structure
+
+```text
+AgriScan/
+│
+├── accounts/          # User authentication, roles, and profiles (Farmer, Expert)
+├── detector/          # Core ML app (AI prediction, Grad-CAM, History)
+├── community/         # Forum, Expert Consultation, Triage Inbox
+├── analytics/         # Weather APIs, SMS alerts, Market Prices
+├── static/            # CSS, JS, Images
+├── media/             # Uploaded leaf images & generated heatmaps
+├── templates/         # HTML files
+├── manage.py
+└── crop_disease_model.h5  # Trained AI Model
+```
+
+---
+
+## 🧪 How to Demo the Project
+
+1. **Register a Farmer Account** and go to the Dashboard.
+2. **Upload an image** of a diseased leaf (or use the webcam). Watch the AI generate a diagnosis and Grad-CAM heatmap.
+3. **Request an Expert Review** on the result page.
+4. **Log out** and Register/Login as an **Agronomist**.
+5. Go to the **Triage Inbox**, review the case, and write a digital prescription.
+6. **Log back in as the Farmer** to see the verified prescription on your dashboard.
+7. Check the **Outbreak Map** to see diseases spreading across India.
+
+---
+
+## 🤝 Contributing
+
+This project was built as a Major Project for academic purposes. Feel free to fork the repository and enhance the AI model or UI.
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License.

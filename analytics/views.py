@@ -1,9 +1,21 @@
 import requests
-from django.shortcuts import render
+import time
+from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.utils import timezone
+from django.http import HttpResponse
+
+# Import your models
 from .models import WeatherLog
+from accounts.models import User, FarmerProfile
+from marketplace.models import Product, Order
+from detector.models import Disease, PredictionLog
+from community.models import ForumPost, ExpertConsultation
+
+# Import your utilities for PDF/Excel generation
+from .utils import export_to_excel, export_to_pdf
 
 @login_required
 def weather_dashboard(request):
@@ -14,41 +26,44 @@ def weather_dashboard(request):
 
     if api_key and api_key != 'paste_your_api_key_here':
         url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
-        response = requests.get(url).json()
+        try:
+            response = requests.get(url).json()
 
-        if response.get('cod') == 200:
-            temp = response['main']['temp']
-            humidity = response['main']['humidity']
-            rainfall = response.get('rain', {}).get('1h', 0) # Rainfall in last 1 hour
-            description = response['weather'][0]['description'].title()
-            wind_speed = response['wind']['speed']
+            if response.get('cod') == 200:
+                temp = response['main']['temp']
+                humidity = response['main']['humidity']
+                rainfall = response.get('rain', {}).get('1h', 0) # Rainfall in last 1 hour
+                description = response['weather'][0]['description'].title()
+                wind_speed = response['wind']['speed']
 
-            weather_data = {
-                'city': response['name'],
-                'temp': temp,
-                'humidity': humidity,
-                'description': description,
-                'wind': wind_speed,
-                'rainfall': rainfall
-            }
+                weather_data = {
+                    'city': response['name'],
+                    'temp': temp,
+                    'humidity': humidity,
+                    'description': description,
+                    'wind': wind_speed,
+                    'rainfall': rainfall
+                }
 
-            # Save to database
-            WeatherLog.objects.create(
-                location=response['name'],
-                temperature=temp,
-                humidity=humidity,
-                rainfall_mm=rainfall
-            )
+                # Save to database
+                WeatherLog.objects.create(
+                    location=response['name'],
+                    temperature=temp,
+                    humidity=humidity,
+                    rainfall_mm=rainfall
+                )
 
-            # Generate Agricultural Alerts based on data
-            if humidity > 80:
-                agricultural_alert = "⚠️ HIGH HUMIDITY WARNING: Conditions are highly favorable for fungal diseases (like Late Blight). Ensure proper air circulation in your fields."
-            elif rainfall > 5:
-                agricultural_alert = "🌧️ HEAVY RAIN WARNING: High risk of soil erosion and runoff. Postpone any scheduled pesticide spraying today."
-            elif temp > 38:
-                agricultural_alert = "🔥 HEATWAVE WARNING: Extreme heat detected. Ensure your crops are adequately irrigated to prevent heat stress."
-            else:
-                agricultural_alert = "✅ OPTIMAL CONDITIONS: The current weather is favorable for normal farming activities."
+                # Generate Agricultural Alerts based on data
+                if humidity > 80:
+                    agricultural_alert = "⚠️ HIGH HUMIDITY WARNING: Conditions are highly favorable for fungal diseases (like Late Blight). Ensure proper air circulation in your fields."
+                elif rainfall > 5:
+                    agricultural_alert = "🌧️ HEAVY RAIN WARNING: High risk of soil erosion and runoff. Postpone any scheduled pesticide spraying today."
+                elif temp > 38:
+                    agricultural_alert = "🔥 HEATWAVE WARNING: Extreme heat detected. Ensure your crops are adequately irrigated to prevent heat stress."
+                else:
+                    agricultural_alert = "✅ OPTIMAL CONDITIONS: The current weather is favorable for normal farming activities."
+        except Exception as e:
+            print(f"Error fetching weather: {e}")
 
     return render(request, 'analytics/weather.html', {
         'weather': weather_data,
@@ -56,26 +71,24 @@ def weather_dashboard(request):
         'city': city
     })
     
-# analytics/views.py
-import time
-from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.contrib.admin.views.decorators import staff_member_required
-from django.utils import timezone
-
-# Import your utilities
-from .utils import export_to_excel, export_to_pdf
-
-# Import all necessary models
-from accounts.models import User, FarmerProfile
-from marketplace.models import Product, Order
-from detector.models import Disease, PredictionLog
-from community.models import ForumPost, ExpertConsultation
+from django.shortcuts import redirect
 
 
-@staff_member_required
+@login_required
+def admin_reports(request):
+    """Renders the page with the download buttons."""
+    if request.user.role != 'admin' and not request.user.is_superuser:
+        return redirect('home')
+    return render(request, 'analytics/admin_reports.html')
+
 def export_admin_data(request, data_type, file_format):
     """Handles generating PDF or Excel for 8 different data types."""
+    # CUSTOM ADMIN CHECK (Matches your dashboard)
+    if request.user.role != 'admin' and not request.user.is_superuser:
+        return HttpResponse("Unauthorized. You must be an Admin to download reports.", status=403)
+    
     timestamp = timezone.now().strftime("%Y%m%d_%H%M")
     
     # 1. Users
@@ -135,7 +148,7 @@ def export_admin_data(request, data_type, file_format):
         data = [[c.scheduled_time.strftime("%Y-%m-%d %H:%M"), c.farmer.username, c.agronomist.username, c.issue_description[:40] + '...', c.status.title()] for c in query]
         
     else:
-        return redirect('admin_reports')
+        return redirect('admin_dashboard') # Redirect to dashboard if invalid type
 
     # Generate the File
     filename = f"AgriScan_{data_type}_{timestamp}"
@@ -146,7 +159,9 @@ def export_admin_data(request, data_type, file_format):
         return export_to_pdf(title, headers, data, filename)
 
 
-@staff_member_required
+@login_required
 def admin_reports(request):
     """Renders the page with the download buttons."""
+    if request.user.role != 'admin' and not request.user.is_superuser:
+        return redirect('home')
     return render(request, 'analytics/admin_reports.html')

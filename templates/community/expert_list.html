@@ -2,143 +2,56 @@
 {% block content %}
 
 <style>
-    /* Force 3 cards horizontally on desktop */
-    .expert-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-        justify-content: center;
-    }
+    .expert-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 1024px) { .expert-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .expert-grid { grid-template-columns: 1fr; } }
 
-    /* 2 cards per row on tablets */
-    @media (max-width: 1024px) {
-        .expert-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    /* 1 card per row on mobile */
-    @media (max-width: 768px) {
-        .expert-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .expert-card {
-        background: white;
-        border-radius: 16px;
-        padding: 32px 24px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        border: 1px solid #eee;
-        transition: transform 0.2s, box-shadow 0.2s;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-    .expert-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    }
-
-    .expert-avatar {
-        width: 80px;
-        height: 80px;
-        background: #ECFDF5;
-        color: #059669;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 40px;
-        margin: 0 auto 16px;
-    }
-
-    .expert-name {
-        font-size: 22px;
-        font-weight: 800;
-        color: #111;
-        margin-bottom: 4px;
-    }
-
-    .expert-spec {
-        color: #059669;
-        font-weight: 600;
-        font-size: 15px;
-        margin-bottom: 8px;
-    }
-
-    .expert-exp {
-        font-size: 14px;
-        color: #666;
-        margin-bottom: 24px;
-        flex: 1; /* Pushes the fee and button to the bottom */
-    }
-
-    .expert-fee-box {
-        background: #F9FAFB;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 24px;
-    }
-
-    .expert-btn {
-        display: block;
-        width: 100%;
-        background: #059669;
-        color: white;
-        padding: 12px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 15px;
-        box-sizing: border-box;
-        transition: background 0.2s;
-    }
-
-    .expert-btn:hover {
-        background: #047857;
-    }
+    .expert-card { background: var(--bg-surface); border-radius: 16px; padding: 32px 24px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); transition: transform 0.2s; display: flex; flex-direction: column; height: 100%; }
+    .expert-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); border-color: var(--primary); }
+    .expert-avatar { width: 80px; height: 80px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 16px; }
+    .expert-name { font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+    .expert-spec { color: var(--primary); font-weight: 600; font-size: 15px; margin-bottom: 8px; }
+    .expert-exp { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; flex: 1; }
+    .expert-btn { display: block; width: 100%; background: var(--primary); color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 15px; box-sizing: border-box; transition: background 0.2s; border: none; cursor: pointer; }
+    .expert-btn:hover { background: var(--primary-hover); }
 </style>
 
 <div style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
     
-    <div style="text-align: center; margin-bottom: 48px;">
-        <h1 style="font-size: 36px; font-weight: 800; color: #111; margin-bottom: 8px;">👨‍🔬 Consult an Expert</h1>
-        <p style="color: #666; font-size: 16px;">Book a 1-on-1 video call with certified Agronomists.</p>
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h1 style="font-size: 36px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">👨‍🔬 Expert Agronomist Review</h1>
+        <p style="color: var(--text-muted); font-size: 16px;">Submit your scan for a verified manual diagnosis by certified plant pathologists.</p>
     </div>
 
-    <!-- 3-Column Grid -->
+    <!-- Banner showing which scan they are asking about -->
+    {% if scan_id %}
+    <div style="max-width: 800px; margin: 0 auto 40px auto; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+        <i class="bi bi-info-circle-fill" style="color: #2563EB; font-size: 24px;"></i>
+        <div>
+            <p style="margin: 0; font-weight: 700; color: #1E3A8A;">Attached Scan Context</p>
+            <p style="margin: 0; color: #1E40AF; font-size: 14px;">You are requesting a review for <b>{{ disease_context }}</b>. The expert will review your uploaded image and AI heatmap.</p>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="expert-grid">
         {% for expert in experts %}
         <div class="expert-card">
-            
-            <!-- Avatar -->
-            <div class="expert-avatar">
-                🧑‍🌾
-            </div>
-            
-            <!-- Name -->
-            <h3 class="expert-name">
-                Dr. {{ expert.user.username|slice:"3:"|title }}
-            </h3>
-            
+            <div class="expert-avatar">🧑‍🌾</div>
+            <h3 class="expert-name">Dr. {{ expert.user.username|slice:"3:"|title }}</h3>
             <p class="expert-spec">{{ expert.specialization }}</p>
             <p class="expert-exp">{{ expert.experience_years }} Years Experience</p>
             
-            <div class="expert-fee-box">
-                <span style="font-size: 14px; color: #666;">Fee:</span>
-                <strong style="font-size: 20px; color: #111; margin-left: 8px;">₹{{ expert.consultation_fee }}</strong>
-            </div>
+            <!-- Removed the Fee Box -->
 
-            <a href="{% url 'book_consultation' expert.user.id %}" class="expert-btn">
-                Book Video Call
+            <!-- Append scan_id to the URL if it exists -->
+            <a href="{% url 'book_consultation' expert.user.id %}?scan_id={{ scan_id }}&disease={{ disease_context }}" class="expert-btn">
+                Request Expert Review
             </a>
         </div>
         {% empty %}
-        <div style="grid-column: 1 / -1; text-align: center; padding: 60px; background: white; border-radius: 12px;">
-            <p style="color: #666; font-size: 16px;">No experts available right now.</p>
+        <div style="grid-column: 1 / -1; text-align: center; padding: 60px; background: white; border-radius: 12px; border: 1px solid #E2E8F0;">
+            <p style="color: #64748B; font-size: 16px;">No experts available right now.</p>
         </div>
         {% endfor %}
     </div>

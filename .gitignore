@@ -1,6 +1,23 @@
-.env
-db.sqlite3
-media/
+# Python bytecode
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+media/
 staticfiles/
+
+# Environments
+venv/
+env/
+.env
+
+# AI Models (Only if they are bigger than 100MB)
+*.h5
+*.tflite
+
+# VS Code
+.vscode/
+.cph/

@@ -1,101 +1,169 @@
 {% extends "base.html" %}
 {% block content %}
+
 <style>
     .auth-wrapper {
-        display: flex; min-height: 80vh; background: white;
-        border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-        margin: 40px auto; max-width: 1100px;
+        display: flex;
+        background: var(--bg-surface);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
+        max-width: 1000px;
+        margin: 40px auto;
     }
+
+    /* Left Side - Green Banner */
     .auth-left {
-        flex: 1; background: linear-gradient(135deg, #059669 0%, #047857 100%);
-        padding: 60px; display: flex; flex-direction: column; justify-content: center; color: white;
+        flex: 1;
+        background: linear-gradient(135deg, #059669, #047857);
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: white;
+        position: relative;
     }
-    .auth-left h1 { font-size: 42px; font-weight: 800; margin-bottom: 16px; line-height: 1.2; }
+    .auth-left h1 { font-size: 42px; font-weight: 800; margin: 0 0 16px 0; line-height: 1.2; }
     .auth-left p { font-size: 18px; opacity: 0.9; line-height: 1.6; }
-    .auth-right { flex: 1; padding: 60px; display: flex; flex-direction: column; justify-content: center; }
-    .auth-right h2 { font-size: 28px; font-weight: 800; color: #111; margin-bottom: 8px; }
-    .auth-right p.subtitle { color: #666; margin-bottom: 32px; }
-    .input-group { margin-bottom: 16px; position: relative; }
-    .input-group label { display: block; font-size: 13px; font-weight: 700; color: #333; margin-bottom: 8px; }
-    .input-group i { position: absolute; left: 16px; top: 42px; color: #999; font-size: 18px; }
+    .auth-icon { font-size: 64px; margin-bottom: 24px; text-align: center; }
+
+    /* Right Side - Form */
+    .auth-right {
+        flex: 1;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background: var(--bg-surface);
+    }
+    .auth-right h2 { font-size: 32px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0; }
+    .auth-right p { color: var(--text-muted); font-size: 15px; margin: 0 0 32px 0; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
     
-    /* Applied directly to Django's generated inputs */
-    .auth-right input, .auth-right select { 
-        width: 100%; padding: 14px 16px 14px 45px; border: 1.5px solid #E5E7EB; border-radius: 10px; 
-        font-size: 15px; font-family: inherit; outline: none; transition: 0.2s; background: #F9FAFB; box-sizing: border-box;
-    }
-    .auth-right input:focus, .auth-right select:focus { 
-        border-color: #059669; background: white; box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1); 
+    /* Styling both Inputs and Select Dropdowns */
+    .form-control, select {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-body);
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif;
+        font-size: 15px;
+        outline: none;
+        transition: all 0.2s;
+        box-sizing: border-box;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
     }
     
-    .btn-auth {
-        width: 100%; padding: 14px; background: #059669; color: white; border: none;
-        border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 10px;
+    /* Custom arrow for select */
+    select {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23059669' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 16px;
+        padding-right: 40px;
+        cursor: pointer;
     }
-    .btn-auth:hover { background: #047857; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2); }
-    .auth-footer { text-align: center; margin-top: 24px; font-size: 14px; color: #666; }
-    .auth-footer a { color: #059669; font-weight: 700; text-decoration: none; }
-    @media (max-width: 900px) {
+    
+    select option { background: var(--bg-surface); color: var(--text-main); }
+
+    .form-control:focus, select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+        background: var(--bg-surface);
+    }
+
+    .btn-submit {
+        width: 100%;
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 16px;
+    }
+    .btn-submit:hover { background: var(--primary-hover); }
+
+    .auth-footer { margin-top: 24px; text-align: center; font-size: 14px; color: var(--text-muted); }
+    .auth-footer a { color: var(--primary); font-weight: 700; text-decoration: none; }
+    
+    @media (max-width: 768px) {
         .auth-wrapper { flex-direction: column; margin: 20px; }
-        .auth-left { padding: 40px; text-align: center; }
+        .auth-left { padding: 40px; }
         .auth-right { padding: 40px; }
     }
 </style>
 
 <div class="auth-wrapper">
+    <!-- Left Side -->
     <div class="auth-left">
-        <div style="font-size: 64px; margin-bottom: 20px;">🌱</div>
-        <h1>Join AgriScan Today</h1>
-        <p>Create your account to start scanning crops, buying treatments, and consulting with experts.</p>
+        <div class="auth-icon">🌱</div>
+        <h1>Join AgriScan</h1>
+        <p>Protect your crops with the power of AI. Get instant disease diagnosis and connect with top agronomists.</p>
     </div>
 
+    <!-- Right Side -->
     <div class="auth-right">
         <h2>Create Account</h2>
-        <p class="subtitle">Fill in your details to get started.</p>
-        
-        <form method="post">
-    {% csrf_token %}
-    
-    <!-- SHOW NON-FIELD ERRORS -->
-    {% if form.non_field_errors %}
-        <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
-            {% for error in form.non_field_errors %}
-                <p style="color: #991B1B; margin: 0; font-size: 13px; font-weight: 600;">{{ error }}</p>
-            {% endfor %}
-        </div>
-    {% endif %}
+        <p>Fill in your details to get started.</p>
 
-    {% for field in form %}
-    <div class="input-group">
-        <label>{{ field.label }}</label>
-        
-        <!-- Add icons based on the field name -->
-        {% if 'username' in field.name %}<i class="bi bi-person"></i>
-        {% elif 'email' in field.name %}<i class="bi bi-envelope"></i>
-        {% elif 'password' in field.name %}<i class="bi bi-lock"></i>
-        {% else %}<i class="bi bi-card-text"></i>{% endif %}
-        
-        {{ field }}
-        
-        <!-- SHOW FIELD ERRORS HERE -->
-        {% if field.errors %}
-            {% for error in field.errors %}
-                <small style="color: #EF4444; font-size: 12px; display: block; margin-top: 4px; font-weight: 600;">{{ error }}</small>
-            {% endfor %}
-        {% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">Register As</label>
+                {{ form.role }}
+                <!-- Applies the form-control styling to the role dropdown -->
+                <script>document.getElementById("id_role").classList.add("form-control");</script>
+            </div>
 
-        {% if field.help_text %}
-            <small style="color: #888; font-size: 11px; display: block; margin-top: 4px;">{{ field.help_text }}</small>
-        {% endif %}
-    </div>
-    {% endfor %}
-    
-    <button type="submit" class="btn-auth">Create Account →</button>
-</form>
-        
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                {{ form.username }}
+                <script>document.getElementById("id_username").classList.add("form-control"); document.getElementById("id_username").placeholder = "Choose a username";</script>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                {{ form.email }}
+                <script>document.getElementById("id_email").classList.add("form-control"); document.getElementById("id_email").placeholder = "Enter your email";</script>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                {{ form.phone }}
+                <script>document.getElementById("id_phone").classList.add("form-control"); document.getElementById("id_phone").placeholder = "Enter your mobile number";</script>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                {{ form.password1 }}
+                <script>document.getElementById("id_password1").classList.add("form-control"); document.getElementById("id_password1").placeholder = "Create a password";</script>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                {{ form.password2 }}
+                <script>document.getElementById("id_password2").classList.add("form-control"); document.getElementById("id_password2").placeholder = "Confirm your password";</script>
+            </div>
+
+            <button type="submit" class="btn-submit">Create Account →</button>
+        </form>
+
         <div class="auth-footer">
-            Already have an account? <a href="{% url 'login' %}">Sign In</a>
+            Already have an account? <a href="{% url 'login' %}">Sign in here</a>
         </div>
     </div>
 </div>
+
 {% endblock %}

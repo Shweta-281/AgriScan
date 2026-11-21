@@ -2,18 +2,18 @@
 {% block content %}
 
 <style>
-    /* Admin Dashboard Container - Matches Home Page */
+    /* Admin Dashboard Container */
     .admin-container { max-width: 1200px; margin: 30px auto 60px auto; padding: 0 20px; font-family: 'Inter', sans-serif; }
     
     /* Header */
     .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
-    .page-header h1 { font-size: 28px; font-weight: 800; color: #111827; margin: 0 0 8px 0; letter-spacing: -0.5px; }
-    .page-header p { font-size: 15px; color: #6B7280; margin: 0; }
-    .live-badge { background: #ECFDF5; color: #059669; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; border: 1px solid #A7F3D0; }
+    .page-header h1 { font-size: 28px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0; letter-spacing: -0.5px; }
+    .page-header p { font-size: 15px; color: var(--text-muted); margin: 0; }
+    .live-badge { background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; border: 1px solid var(--border-color); }
 
-    /* KPI Stats Grid - 4 Columns */
+    /* KPI Stats Grid */
     .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
-    .kpi-card { background: white; border-radius: 12px; border: 1px solid #E5E7EB; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+    .kpi-card { background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-color); padding: 24px; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
     .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     
     /* Colored Top Accents */
@@ -23,39 +23,64 @@
     .kpi-card.consults::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: #8B5CF6; }
 
     .kpi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .kpi-title { font-size: 13px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+    .kpi-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
     .kpi-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .kpi-icon.green { background: #ECFDF5; color: #10B981; }
-    .kpi-icon.blue { background: #EFF6FF; color: #3B82F6; }
-    .kpi-icon.orange { background: #FFF7ED; color: #F59E0B; }
-    .kpi-icon.purple { background: #F5F3FF; color: #8B5CF6; }
-    .kpi-value { font-size: 32px; font-weight: 800; color: #111827; margin: 0; line-height: 1; }
+    .kpi-icon.green { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+    .kpi-icon.blue { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+    .kpi-icon.orange { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+    .kpi-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8B5CF6; }
+    .kpi-value { font-size: 32px; font-weight: 800; color: var(--text-main); margin: 0; line-height: 1; }
 
     /* Content Grid */
-    .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 40px; }
 
     /* Widget Cards */
-    .widget-card { background: white; border-radius: 16px; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; height: 100%; }
-    .widget-header { padding: 20px 24px; border-bottom: 1px solid #F3F4F6; display: flex; justify-content: space-between; align-items: center; }
-    .widget-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0; display: flex; align-items: center; gap: 8px; }
-    .widget-badge { background: #F3F4F6; color: #4B5563; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .widget-card { background: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; height: 100%; }
+    .widget-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .widget-title { font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 8px; }
+    .widget-badge { background: var(--bg-body); color: var(--text-muted); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
     .widget-content { padding: 20px 24px; flex-grow: 1; }
 
     /* Recent Activity Feed */
-    .activity-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #F3F4F6; }
+    .activity-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border-color); }
     .activity-row:last-child { border-bottom: none; padding-bottom: 0; }
     .activity-user { display: flex; align-items: center; gap: 12px; }
-    .activity-avatar { background: #ECFDF5; color: #059669; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
-    .activity-name { margin: 0; font-size: 14px; font-weight: 600; color: #1F2937; }
-    .activity-action { margin: 2px 0 0 0; font-size: 12px; color: #6B7280; }
-    
-    .activity-badge { font-size: 12px; font-weight: 700; color: #059669; background: #ECFDF5; padding: 4px 8px; border-radius: 6px; display: inline-block; text-align: right; }
-    .activity-time { margin: 4px 0 0 0; font-size: 11px; color: #9CA3AF; text-align: right; }
+    .activity-avatar { background: var(--primary-light); color: var(--primary); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
+    .activity-name { margin: 0; font-size: 14px; font-weight: 600; color: var(--text-main); }
+    .activity-action { margin: 2px 0 0 0; font-size: 12px; color: var(--text-muted); }
+    .activity-badge { font-size: 12px; font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 4px 8px; border-radius: 6px; display: inline-block; text-align: right; }
+    .activity-time { margin: 4px 0 0 0; font-size: 11px; color: var(--text-muted); text-align: right; }
 
-    /* Responsive */
+    /* --- NEW: DATA EXPORTS SECTION --- */
+    .section-divider { display: flex; align-items: center; gap: 16px; margin: 40px 0 24px 0; }
+    .section-divider h2 { font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0; white-space: nowrap; }
+    .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border-color); }
+    .date-stamp { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-muted); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+    .reports-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .export-card { background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-color); padding: 24px; display: flex; flex-direction: column; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .export-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.08); }
+    
+    .export-icon { font-size: 28px; margin-bottom: 12px; }
+    .export-title { font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0 0 8px 0; }
+    .export-desc { color: var(--text-muted); font-size: 13px; line-height: 1.5; margin: 0 0 20px 0; flex-grow: 1; }
+    
+    .export-actions { display: flex; gap: 10px; }
+    .btn-export { flex: 1; padding: 10px 0; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+    
+    /* Dark Mode Friendly Export Buttons */
+    .btn-pdf { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+    .btn-pdf:hover { background: rgba(239, 68, 68, 0.2); }
+    .btn-excel { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+    .btn-excel:hover { background: rgba(16, 185, 129, 0.2); }
+
     @media (max-width: 1024px) {
         .kpi-grid { grid-template-columns: repeat(2, 1fr); }
         .content-grid { grid-template-columns: 1fr; }
+        .reports-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+        .reports-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
         .kpi-grid { grid-template-columns: 1fr; }
@@ -72,66 +97,42 @@
             <p>A bird's-eye view of the entire AgriScan ecosystem.</p>
         </div>
         <div class="live-badge">
-            <span style="display: inline-block; width: 8px; height: 8px; background: #059669; border-radius: 50%;"></span> Live Data
+            <span style="display: inline-block; width: 8px; height: 8px; background: var(--primary); border-radius: 50%;"></span> Live Data
         </div>
     </div>
 
-    <!-- Top Stats Grid (4 Columns) -->
+    <!-- Top Stats Grid -->
     <div class="kpi-grid">
-        <!-- Total Scans -->
         <div class="kpi-card scans">
-            <div class="kpi-header">
-                <p class="kpi-title">Total AI Scans</p>
-                <div class="kpi-icon green"><i class="bi bi-cpu"></i></div>
-            </div>
+            <div class="kpi-header"><p class="kpi-title">Total AI Scans</p><div class="kpi-icon green"><i class="bi bi-cpu"></i></div></div>
             <h2 class="kpi-value">{{ total_scans }}</h2>
         </div>
-
-        <!-- Registered Users -->
         <div class="kpi-card users">
-            <div class="kpi-header">
-                <p class="kpi-title">Registered Users</p>
-                <div class="kpi-icon blue"><i class="bi bi-people"></i></div>
-            </div>
+            <div class="kpi-header"><p class="kpi-title">Registered Users</p><div class="kpi-icon blue"><i class="bi bi-people"></i></div></div>
             <h2 class="kpi-value">{{ total_users }}</h2>
         </div>
-
-        <!-- Total Orders -->
         <div class="kpi-card orders">
-            <div class="kpi-header">
-                <p class="kpi-title">Total Orders</p>
-                <div class="kpi-icon orange"><i class="bi bi-cart-check"></i></div>
-            </div>
+            <div class="kpi-header"><p class="kpi-title">Total Orders</p><div class="kpi-icon orange"><i class="bi bi-cart-check"></i></div></div>
             <h2 class="kpi-value">{{ total_orders }}</h2>
         </div>
-
-        <!-- Consultations (Added to balance the grid) -->
         <div class="kpi-card consults">
-            <div class="kpi-header">
-                <p class="kpi-title">Consultations</p>
-                <div class="kpi-icon purple"><i class="bi bi-chat-dots"></i></div>
-            </div>
+            <div class="kpi-header"><p class="kpi-title">Consultations</p><div class="kpi-icon purple"><i class="bi bi-chat-dots"></i></div></div>
             <h2 class="kpi-value">{{ total_consultations }}</h2>
         </div>
     </div>
 
-    <!-- Bottom Grid (Chart + Recent Activity) -->
+    <!-- Charts and Activity -->
     <div class="content-grid">
-        
-        <!-- Chart Card -->
         <div class="widget-card">
             <div class="widget-header">
                 <h3 class="widget-title"><i class="bi bi-bug-fill" style="color: #EF4444;"></i> Top Detected Diseases</h3>
-                <span class="widget-badge">Last 30 Days</span>
+                <span class="widget-badge">All Time</span>
             </div>
             <div class="widget-content" style="padding-bottom: 0;">
-                <div style="position: relative; height: 380px; width: 100%;">
-                    <canvas id="diseaseChart"></canvas>
-                </div>
+                <div style="position: relative; height: 350px; width: 100%;"><canvas id="diseaseChart"></canvas></div>
             </div>
         </div>
 
-        <!-- Recent Activity Card -->
         <div class="widget-card">
             <div class="widget-header">
                 <h3 class="widget-title"><i class="bi bi-activity" style="color: #3B82F6;"></i> Recent AI Activity</h3>
@@ -141,9 +142,7 @@
                     {% for scan in recent_scans %}
                     <div class="activity-row">
                         <div class="activity-user">
-                            <div class="activity-avatar">
-                                {{ scan.user.username|first|upper }}
-                            </div>
+                            <div class="activity-avatar">{{ scan.user.username|first|upper }}</div>
                             <div>
                                 <p class="activity-name">{{ scan.user.username }}</p>
                                 <p class="activity-action">scanned a leaf</p>
@@ -155,7 +154,7 @@
                         </div>
                     </div>
                     {% empty %}
-                    <div style="text-align: center; padding: 40px 0; color: #9CA3AF;">
+                    <div style="text-align: center; padding: 40px 0; color: var(--text-muted);">
                         <i class="bi bi-hourglass-split" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
                         <p style="margin: 0; font-size: 14px;">No recent scans.</p>
                     </div>
@@ -165,9 +164,83 @@
         </div>
     </div>
 
+    <!-- NEW: Data Exports Section -->
+    <div class="section-divider">
+        <h2><i class="bi bi-download" style="color: var(--primary);"></i> Data Exports</h2>
+        <span class="date-stamp"><i class="bi bi-calendar3"></i> {% now "d M Y, H:i A" %}</span>
+    </div>
+
+    <div class="reports-grid">
+        <!-- 1. Users -->
+        <div class="export-card" style="border-top: 4px solid #3B82F6;">
+            <div class="export-icon">👥</div>
+            <h4 class="export-title">System Users</h4>
+            <p class="export-desc">All registered accounts (Farmers, Agronomists, Admins).</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'users' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'users' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-excel"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 2. Farmer Profiles -->
+        <div class="export-card" style="border-top: 4px solid #10B981;">
+            <div class="export-icon">🚜</div>
+            <h4 class="export-title">Farmer Profiles</h4>
+            <p class="export-desc">Location, farm size, and soil data for all farmers.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'farmers' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'farmers' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-excel"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 3. Disease Catalog -->
+        <div class="export-card" style="border-top: 4px solid #8B5CF6;">
+            <div class="export-icon">🦠</div>
+            <h4 class="export-title">Disease Catalog</h4>
+            <p class="export-desc">Knowledge base of diseases, treatments, and prevention.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'diseases' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'diseases' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-excel"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 4. AI Prediction Logs -->
+        <div class="export-card" style="border-top: 4px solid #0EA5E9;">
+            <div class="export-icon">🧠</div>
+            <h4 class="export-title">AI Prediction Logs</h4>
+            <p class="export-desc">History of all scans, confidence scores, and severity.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'predictions' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'predictions' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-excel"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 5. Marketplace Products (Keeping for demo) -->
+        <div class="export-card" style="border-top: 4px solid #F59E0B;">
+            <div class="export-icon">📦</div>
+            <h4 class="export-title">Product Catalog</h4>
+            <p class="export-desc">All marketplace items, prices, and stock levels.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'products' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'products' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-excel"></i> Excel</a>
+            </div>
+        </div>
+
+        <!-- 6. Forum Posts -->
+        <div class="export-card" style="border-top: 4px solid #64748B;">
+            <div class="export-icon">💬</div>
+            <h4 class="export-title">Community Forum</h4>
+            <p class="export-desc">All discussion posts and answers created by users.</p>
+            <div class="export-actions">
+                <a href="{% url 'export_admin_data' 'forum' 'pdf' %}" class="btn-export btn-pdf"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="{% url 'export_admin_data' 'forum' 'excel' %}" class="btn-export btn-excel"><i class="bi bi-file-excel"></i> Excel</a>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- Chart.js Script (Kept exactly as you had it) -->
+<!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -181,11 +254,11 @@
                 data: {
                     labels: labels.length ? labels : ['No Data'],
                     datasets: [{
-                        label: 'Number of Cases',
+                        label: 'Cases',
                         data: data.length ? data : [0],
                         backgroundColor: '#059669',
-                        borderRadius: 8,
-                        barThickness: 40 // Slightly thinner bars look more elegant
+                        borderRadius: 6,
+                        barThickness: 35
                     }]
                 },
                 options: {
@@ -193,24 +266,11 @@
                     maintainAspectRatio: false,
                     plugins: { 
                         legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#111827',
-                            titleFont: { size: 14, family: 'Inter' },
-                            bodyFont: { size: 14, family: 'Inter' },
-                            padding: 12,
-                            cornerRadius: 8
-                        }
+                        tooltip: { backgroundColor: '#111827', padding: 12, cornerRadius: 8 }
                     },
                     scales: { 
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { stepSize: 1, font: { size: 13, family: 'Inter' }, color: '#6B7280' },
-                            grid: { color: '#F3F4F6', drawBorder: false }
-                        },
-                        x: {
-                            ticks: { font: { size: 13, family: 'Inter', weight: '600' }, color: '#4B5563' },
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: true, ticks: { stepSize: 1, color: '#6B7280' }, grid: { color: 'var(--border-color)', drawBorder: false } },
+                        x: { ticks: { font: { size: 12, weight: '600' }, color: '#4B5563' }, grid: { display: false } }
                     }
                 }
             });
