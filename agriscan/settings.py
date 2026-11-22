@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',   # ← collectstatic lives here
     'detector',
     'accounts',
-    'marketplace',
     'rest_framework',
     'community',
     'analytics',

@@ -2,124 +2,62 @@
 {% block content %}
 
 <style>
-    /* Professional Result Layout */
     .result-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-    
-    /* Header */
     .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .result-header h1 { font-size: 28px; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 12px; }
     .header-actions { display: flex; gap: 12px; }
-    
-    .btn-outline { 
-        background: var(--bg-surface); border: 1px solid var(--border-color); 
-        color: var(--text-main); padding: 10px 20px; border-radius: 8px; 
-        font-weight: 600; font-size: 14px; text-decoration: none; transition: 0.2s;
-        display: flex; align-items: center; gap: 8px; cursor: pointer;
-    }
+    .btn-outline { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 8px; cursor: pointer; }
     .btn-outline:hover { background: var(--bg-body); border-color: var(--primary); }
 
-    /* Grid Layout */
     .result-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px; }
     @media (max-width: 900px) { .result-grid { grid-template-columns: 1fr; } }
 
-    /* Images Column */
-    .image-card { 
-        background: var(--bg-surface); border: 1px solid var(--border-color); 
-        border-radius: 16px; padding: 24px; margin-bottom: 24px; 
-    }
+    .image-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
     .image-card h4 { margin: 0 0 16px 0; font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
     .result-img { width: 100%; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-    /* Info Column */
-    .info-card { 
-        background: var(--bg-surface); border: 1px solid var(--border-color); 
-        border-radius: 16px; padding: 32px; height: 100%;
-    }
+    .info-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; height: 100%; }
     
-    /* Alerts */
     .alert-banner { padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start; }
     .alert-warning { background: #FEF3C7; border: 1px solid #FDE68A; color: #92400E; }
     .alert-danger { background: #FEE2E2; border: 1px solid #FECACA; color: #991B1B; }
 
-    /* Disease Title */
     .disease-title { font-size: 36px; font-weight: 800; color: var(--text-main); line-height: 1.1; margin: 0 0 16px 0; }
     
-    /* Confidence Bar */
     .confidence-wrapper { background: var(--bg-body); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; border: 1px solid var(--border-color); }
     .confidence-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
     .bar-bg { background: var(--border-color); height: 10px; border-radius: 5px; overflow: hidden; }
     .bar-fill { background: var(--primary); height: 100%; border-radius: 5px; }
 
-    /* Data Sections */
     .data-section { margin-bottom: 24px; }
     .data-section h3 { font-size: 16px; font-weight: 800; color: var(--text-main); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px; }
     .data-section p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0; }
     
-    /* Treatment Tabs */
     .treatment-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .tab-btn { background: var(--bg-body); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
     .tab-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
     .tab-content { display: none; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; }
     .tab-content.active { display: block; }
 
-    /* Alternatives */
-    .alternatives-list { display: flex; flex-direction: column; gap: 8px; }
-    .alternative-item { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 12px; background: var(--bg-body); border-radius: 8px; color: var(--text-main); }
-    
-    /* Next Steps Box */
     .next-steps { margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 24px; }
-    .action-btn { 
-        display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 12px; 
-        text-decoration: none; margin-bottom: 12px; transition: 0.2s; border: 1px solid var(--border-color);
-        background: var(--bg-surface);
-    }
+    .action-btn { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 12px; text-decoration: none; margin-bottom: 12px; transition: 0.2s; border: 1px solid var(--border-color); background: var(--bg-surface); }
     .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    
-    /* Focus on Expert Action */
     .action-btn.primary { border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
     .action-btn.primary:hover { border-color: var(--primary); background: rgba(16, 185, 129, 0.1); }
     
     .action-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
     .action-icon.primary { background: var(--primary); color: white; }
     .action-icon.community { background: #E0F2FE; color: #0284C7; }
-    
-    /* Dark Mode Fixes for specific text */
-    [data-theme="dark"] .action-btn.primary { background: rgba(16, 185, 129, 0.15); }
-    [data-theme="dark"] .alert-warning { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); color: #FCD34D; }
-    [data-theme="dark"] .alert-danger { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #FCA5A5; }
 
-    /* --- EXPERT VERIFIED BOX STYLES --- */
-    .expert-box {
-        background: rgba(16, 185, 129, 0.05); /* Light green tint */
-        border: 2px solid #10B981; /* Solid green border */
-        border-radius: 16px;
-        padding: 24px;
-        margin-top: 24px;
-        position: relative;
-    }
-    .expert-badge {
-        position: absolute;
-        top: -12px;
-        left: 24px;
-        background: #10B981;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
+    .expert-box { background: rgba(16, 185, 129, 0.05); border: 2px solid #10B981; border-radius: 16px; padding: 24px; margin-top: 24px; position: relative; }
+    .expert-badge { position: absolute; top: -12px; left: 24px; background: #10B981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
     .expert-title { font-size: 20px; font-weight: 800; color: var(--text-main); margin: 8px 0 16px 0; }
     .expert-section-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
     .expert-text { font-size: 14px; color: var(--text-main); line-height: 1.5; margin-bottom: 16px; }
-    
 </style>
 
 <div class="result-container">
     
-    <!-- Header -->
     <div class="result-header">
         <h1><i class="bi bi-clipboard2-pulse" style="color: var(--primary);"></i> Diagnosis Report</h1>
         <div class="header-actions">
@@ -137,10 +75,7 @@
         </div>
     </div>
 
-    <!-- Main Grid -->
     <div class="result-grid">
-        
-        <!-- Left: Images -->
         <div>
             <div class="image-card">
                 <h4><i class="bi bi-image"></i> Original Upload</h4>
@@ -162,9 +97,7 @@
             {% endif %}
         </div>
 
-        <!-- Right: Diagnosis Info -->
         <div class="info-card">
-            
             {% if log.is_ood %}
                 <div class="alert-banner alert-danger">
                     <i class="bi bi-exclamation-octagon" style="font-size: 20px;"></i>
@@ -188,7 +121,6 @@
             </h2>
 
             {% if not log.is_ood %}
-            <!-- AI Confidence -->
             <div class="confidence-wrapper">
                 <div class="confidence-header">
                     <span>AI Confidence</span>
@@ -199,7 +131,6 @@
                 </div>
             </div>
 
-            <!-- Severity -->
             {% if log.severity %}
             <div class="confidence-wrapper" style="margin-top: -12px;">
                 <div class="confidence-header">
@@ -213,7 +144,6 @@
             </div>
             {% endif %}
 
-            <!-- Description (Always Shown) -->
             <div class="data-section">
                 <h3><i class="bi bi-info-circle"></i> Description</h3>
                 <p>
@@ -225,44 +155,32 @@
                 </p>
             </div>
 
-            <!-- ========================================== -->
-            <!-- SMART SWITCH: EXPERT VERIFIED VS AI TREATMENT -->
-            <!-- ========================================== -->
-
             {% if log.review_status == 'verified' %}
-                <!-- EXPERT VERIFIED PRESCRIPTION -->
                 <div class="expert-box">
                     <div class="expert-badge"><i class="bi bi-patch-check-fill"></i> Verified by Agronomist</div>
-                    
                     <h3 class="expert-title">Expert Prescription</h3>
                     
                     <div class="expert-section-title" style="color: var(--text-main);">
                         <i class="bi bi-check-circle-fill" style="color: #10B981;"></i> Confirmed Diagnosis:
                     </div>
-                    <!-- DEMO FALLBACK: If expert didn't type, show a demo text -->
                     <p class="expert-text">{{ log.expert_diagnosis|default:"Corn Northern Leaf Blight (Confirmed by Expert)" }}</p>
 
                     <div class="expert-section-title" style="color: var(--primary);">
                         <i class="bi bi-leaf"></i> Organic Cure:
                     </div>
-                    <!-- DEMO FALLBACK -->
                     <p class="expert-text">{{ log.expert_organic_cure|default:"Apply Bacillus subtilis bio-fungicide every 7 days. Remove and destroy heavily infected lower leaves to reduce inoculum spread." }}</p>
 
                     <div class="expert-section-title" style="color: #EF4444;">
                         <i class="bi bi-droplet-fill"></i> Chemical Cure:
                     </div>
-                    <!-- DEMO FALLBACK -->
                     <p class="expert-text">{{ log.expert_chemical_cure|default:"Spray Azoxystrobin 23% SC @ 1ml/liter of water. Ensure thorough coverage of the foliage. Do not spray within 14 days of harvest." }}</p>
 
                     <div class="expert-section-title" style="color: #3B82F6;">
                         <i class="bi bi-shield-check"></i> Preventative Practices:
                     </div>
-                    <!-- DEMO FALLBACK -->
                     <p class="expert-text">{{ log.expert_prevention|default:"Practice crop rotation with non-host crops for at least one season. Maintain proper plant spacing (at least 30cm) to improve air circulation and reduce humidity." }}</p>
                 </div>
-
             {% else %}
-                <!-- STANDARD AI TREATMENT TABS -->
                 <div class="data-section">
                     <h3><i class="bi bi-bandaid"></i> AI Treatment Suggestions</h3>
                     
@@ -302,13 +220,12 @@
                 </div>
             {% endif %}
 
-            <!-- Other Possibilities -->
             {% if log.alternatives %}
             <div class="data-section">
                 <h3><i class="bi bi-list-check"></i> Other Possibilities</h3>
                 <div class="alternatives-list">
                     {% for alt in log.alternatives %}
-                        {% if not forloop.first %} <!-- Skip the #1 prediction -->
+                        {% if not forloop.first %}
                         <div class="alternative-item">
                             <span>{{ alt.name }}</span>
                             <span style="font-weight: 700;">{{ alt.confidence|floatformat:2 }}%</span>
@@ -318,10 +235,8 @@
                 </div>
             </div>
             {% endif %}
-
             {% endif %}
 
-            <!-- Next Steps -->
             <div class="next-steps">
                 <h3 style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-bottom: 16px;">Next Steps</h3>
                 
@@ -334,7 +249,6 @@
                         </div>
                     </a>
                 {% elif log.review_status == 'pending' %}
-                    <!-- Only show this if NOT verified yet -->
                     <a href="{% url 'expert_list' %}?disease={{ disease.name }}&scan_id={{ log.id }}" class="action-btn primary">
                         <div class="action-icon primary"><i class="bi bi-person-badge"></i></div>
                         <div>
@@ -344,7 +258,6 @@
                     </a>
                 {% endif %}
                 
-                <!-- Share to Community -->
                 <a href="/community/forum/" class="action-btn">
                     <div class="action-icon community"><i class="bi bi-people"></i></div>
                     <div>
@@ -359,41 +272,25 @@
 </div>
 
 <script>
-    // Tab Switching Logic
     function switchTab(evt, tabName) {
         const tabContents = document.getElementsByClassName("tab-content");
-        for (let i = 0; i < tabContents.length; i++) {
-            tabContents[i].classList.remove("active");
-        }
-        
+        for (let i = 0; i < tabContents.length; i++) { tabContents[i].classList.remove("active"); }
         const tabBtns = document.getElementsByClassName("tab-btn");
-        for (let i = 0; i < tabBtns.length; i++) {
-            tabBtns[i].classList.remove("active");
-        }
-        
+        for (let i = 0; i < tabBtns.length; i++) { tabBtns[i].classList.remove("active"); }
         document.getElementById(tabName).classList.add("active");
         evt.currentTarget.classList.add("active");
     }
 
-    // Voice AI
     function speakDiagnosis() {
         const disease = "{{ disease.name|escapejs }}";
         const treatment = "{{ disease.treatment|escapejs }}";
         const text = `Your crop has been diagnosed with ${disease}. The recommended organic treatment is: ${treatment}`;
-        
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9;
-            utterance.lang = 'en-IN';
-            const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.lang.includes('en-IN')) || voices.find(v => v.lang.includes('en'));
-            if (preferredVoice) utterance.voice = preferredVoice;
+            utterance.rate = 0.9; utterance.lang = 'en-IN';
             window.speechSynthesis.speak(utterance);
-        } else {
-            alert('Voice is not supported in this browser.');
-        }
+        } else { alert('Voice is not supported in this browser.'); }
     }
 </script>
-
 {% endblock %}

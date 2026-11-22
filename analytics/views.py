@@ -9,9 +9,8 @@ from django.http import HttpResponse
 
 # Import your models
 from .models import WeatherLog
-from accounts.models import User, FarmerProfile
-from marketplace.models import Product, Order
-from detector.models import Disease, PredictionLog
+from accounts.models import AgronomistProfile, User, FarmerProfile
+from detector.models import CropCycle, Disease, PredictionLog
 from community.models import ForumPost, ExpertConsultation
 
 # Import your utilities for PDF/Excel generation
@@ -83,82 +82,94 @@ def admin_reports(request):
         return redirect('home')
     return render(request, 'analytics/admin_reports.html')
 
+import csv
+from django.http import HttpResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
 def export_admin_data(request, data_type, file_format):
-    """Handles generating PDF or Excel for 8 different data types."""
-    # CUSTOM ADMIN CHECK (Matches your dashboard)
-    if request.user.role != 'admin' and not request.user.is_superuser:
-        return HttpResponse("Unauthorized. You must be an Admin to download reports.", status=403)
-    
-    timestamp = timezone.now().strftime("%Y%m%d_%H%M")
-    
-    # 1. Users
+    # 1. Ensure only admins can export
+    if not request.user.is_authenticated or (request.user.role != 'admin' and not request.user.is_superuser):
+        return redirect('home')
+
+    # 2. Define the data based on the requested type
     if data_type == 'users':
-        title = "System Users Report"
-        headers = ['Username', 'Full Name', 'Email', 'Role', 'Phone', 'Date Joined']
-        query = User.objects.all().order_by('date_joined')
-        data = [[u.username, u.get_full_name(), u.email, u.role.title(), u.phone or "N/A", u.date_joined.strftime("%Y-%m-%d")] for u in query]
+        title = "System Users"
+        headers = ['Username', 'Email', 'Role', 'Phone', 'Joined']
+        data = [[u.username, u.email, u.role, u.phone, u.date_joined.strftime('%Y-%m-%d')] for u in User.objects.all()]
         
-    # 2. Farmer Profiles
     elif data_type == 'farmers':
         title = "Farmer Profiles"
-        headers = ['Username', 'Full Name', 'Location', 'Farm Size (Acres)', 'Soil Type']
-        query = FarmerProfile.objects.select_related('user').all()
-        data = [[f.user.username, f.user.get_full_name(), f.location, f.farm_size_acres, f.soil_type or "N/A"] for f in query]
+        headers = ['Username', 'Location', 'Farm Size (Acres)', 'Soil Type']
+        data = [[f.user.username, f.location, f.farm_size_acres, f.soil_type] for f in FarmerProfile.objects.all()]
         
-    # 3. Products (Marketplace)
-    elif data_type == 'products':
-        title = "Product Catalog"
-        headers = ['ID', 'Name', 'Category', 'Price (₹)', 'Stock', 'Seller']
-        query = Product.objects.select_related('category', 'seller').all()
-        data = [[p.id, p.name, p.category.name, p.price, p.stock, p.seller.username] for p in query]
+    elif data_type == 'experts':
+        title = "Expert Profiles"
+        headers = ['Username', 'Specialization', 'Experience (Yrs)', 'Consultation Fee']
+        data = [[e.user.username, e.specialization, e.experience_years, e.consultation_fee] for e in AgronomistProfile.objects.all()]
         
-    # 4. Orders (Marketplace)
-    elif data_type == 'orders':
-        title = "All Orders"
-        headers = ['Order ID', 'Date', 'Farmer', 'Total Amount (₹)', 'Status']
-        query = Order.objects.select_related('farmer').all().order_by('-created_at')
-        data = [[o.id, o.created_at.strftime("%Y-%m-%d"), o.farmer.username, o.total_amount, o.status] for o in query]
+    elif data_type == 'crops':
+        title = "Active Crop Cycles"
+        headers = ['Farmer', 'Crop Name', 'Sowing Date', 'Status']
+        data = [[c.farmer.username, c.crop.name, c.sowing_date.strftime('%Y-%m-%d'), 'Active' if c.is_active else 'Inactive'] for c in CropCycle.objects.all()]
         
-    # 5. Disease Catalog
     elif data_type == 'diseases':
-        title = "Disease Knowledge Base"
-        headers = ['Disease Name', 'Description', 'Treatment', 'Prevention']
-        query = Disease.objects.all()
-        data = [[d.name, d.description[:50] + '...', d.treatment[:50] + '...', d.prevention[:50] + '...'] for d in query]
+        title = "Disease Catalog"
+        headers = ['Disease Name', 'Treatment', 'Prevention']
+        data = [[d.name, d.treatment[:50] + '...', d.prevention[:50] + '...'] for d in Disease.objects.all()]
         
-    # 6. AI Prediction Logs
     elif data_type == 'predictions':
         title = "AI Prediction Logs"
-        headers = ['Date', 'Farmer', 'Crop Cycle', 'Predicted Disease', 'Confidence', 'Severity %', 'Review Status']
-        query = PredictionLog.objects.select_related('user', 'crop_cycle').all().order_by('-date_uploaded')
-        data = [[p.date_uploaded.strftime("%Y-%m-%d"), p.user.username, str(p.crop_cycle) if p.crop_cycle else "N/A", p.predicted_disease, f"{p.confidence:.1%}", p.severity, p.review_status.title()] for p in query]
+        headers = ['Scan ID', 'Farmer', 'Predicted Disease', 'Confidence', 'Severity', 'Date']
+        data = [[str(p.id), p.user.username, p.predicted_disease, f"{p.confidence}%", f"{p.severity}%", p.date_uploaded.strftime('%Y-%m-%d')] for p in PredictionLog.objects.all()]
         
-    # 7. Forum Posts (Community)
     elif data_type == 'forum':
         title = "Community Forum Posts"
-        headers = ['Date', 'Author', 'Title', 'Content Snippet']
-        query = ForumPost.objects.select_related('author').all().order_by('-created_at')
-        data = [[p.created_at.strftime("%Y-%m-%d"), p.author.username, p.title, p.content[:40] + '...'] for p in query]
-        
-    # 8. Expert Consultations
-    elif data_type == 'consultations':
-        title = "Expert Consultations"
-        headers = ['Scheduled Time', 'Farmer', 'Agronomist', 'Issue', 'Status']
-        query = ExpertConsultation.objects.select_related('farmer', 'agronomist').all().order_by('-scheduled_time')
-        data = [[c.scheduled_time.strftime("%Y-%m-%d %H:%M"), c.farmer.username, c.agronomist.username, c.issue_description[:40] + '...', c.status.title()] for c in query]
-        
+        headers = ['Author', 'Title', 'Created At']
+        data = [[post.author.username, post.title, post.created_at.strftime('%Y-%m-%d')] for post in ForumPost.objects.all()]
     else:
-        return redirect('admin_dashboard') # Redirect to dashboard if invalid type
+        return redirect('admin_dashboard')
 
-    # Generate the File
-    filename = f"AgriScan_{data_type}_{timestamp}"
-    
-    if file_format == 'excel':
-        return export_to_excel(headers, data, filename)
-    else:
-        return export_to_pdf(title, headers, data, filename)
+    # 3. Generate PDF
+    if file_format == 'pdf':
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{title}.pdf"'
+        
+        doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        elements.append(Paragraph(f"AgriScan Admin Export - {title}", styles['Heading1']))
+        
+        table_data = [headers] + data
+        t = Table(table_data)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#059669")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#F9FAFB")),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#E5E7EB")),
+        ]))
+        elements.append(t)
+        doc.build(elements)
+        return response
 
+    # 4. Generate CSV (Excel)
+    elif file_format == 'excel':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{title}.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(headers)
+        writer.writerows(data)
+        return response
 
+    return redirect('admin_dashboard')
 @login_required
 def admin_reports(request):
     """Renders the page with the download buttons."""

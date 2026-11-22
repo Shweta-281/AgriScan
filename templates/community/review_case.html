@@ -5,14 +5,11 @@
     .review-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; font-family: 'Inter', sans-serif; }
     .back-link { display: inline-block; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 24px; }
     .back-link:hover { color: var(--primary); }
-
     .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
     @media (max-width: 900px) { .grid-layout { grid-template-columns: 1fr; } }
 
-    /* Left Column: Data */
     .data-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
     .card-title { font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; }
-    
     .image-preview { width: 100%; border-radius: 12px; object-fit: contain; background: #000; max-height: 400px; margin-bottom: 16px; }
     
     .ai-box { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 16px; border-radius: 12px; }
@@ -25,7 +22,6 @@
     .context-label { color: var(--text-muted); }
     .context-value { color: var(--text-main); font-weight: 600; }
 
-    /* Right Column: Form */
     .form-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; }
     .form-group { margin-bottom: 24px; }
     .form-label { display: block; font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
@@ -40,7 +36,6 @@
     <a href="{% url 'agronomist_dashboard' %}" class="back-link">← Back to Triage Inbox</a>
 
     <div class="grid-layout">
-        <!-- Left Side: Case Details -->
         <div>
             <div class="data-card">
                 <h3 class="card-title"><i class="bi bi-image" style="color: var(--primary);"></i> Farmer Upload</h3>
@@ -72,7 +67,6 @@
             </div>
         </div>
 
-        <!-- Right Side: Prescription Form -->
         <div>
             <div class="form-card">
                 <h3 class="card-title"><i class="bi bi-file-medical" style="color: var(--primary);"></i> Digital Prescription</h3>

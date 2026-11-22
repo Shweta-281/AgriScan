@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, FarmerProfile, AgronomistProfile, SellerProfile # <-- Add SellerProfile
+from .models import User, FarmerProfile, AgronomistProfile
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -10,4 +10,3 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.register(FarmerProfile)
 admin.site.register(AgronomistProfile)
-admin.site.register(SellerProfile) 

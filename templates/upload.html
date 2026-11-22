@@ -3,96 +3,44 @@
 
 <style>
     /* Professional Dashboard Grid */
-    .top-row { 
-        display: grid; 
-        grid-template-columns: 2.5fr 1fr 1fr; 
-        gap: 20px; 
-        margin-bottom: 24px; 
-    }
+    .top-row { display: grid; grid-template-columns: 2.5fr 1fr 1fr; gap: 20px; margin-bottom: 24px; }
     
     /* Upload Banner */
     .scan-banner { 
-        background: linear-gradient(135deg, var(--primary), #047857); 
-        border-radius: 16px; 
-        padding: 32px; 
-        color: white; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.3);
-        position: relative;
-        overflow: hidden;
+        background: linear-gradient(135deg, var(--primary), #047857); border-radius: 16px; padding: 32px; color: white; 
+        display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.3); position: relative; overflow: hidden;
     }
-    .scan-banner::after {
-        content: '\F2C2';
-        font-family: 'bootstrap-icons';
-        position: absolute;
-        right: -20px;
-        bottom: -30px;
-        font-size: 180px;
-        opacity: 0.1;
-    }
+    .scan-banner::after { content: '\F2C2'; font-family: 'bootstrap-icons'; position: absolute; right: -20px; bottom: -30px; font-size: 180px; opacity: 0.1; }
     .scan-banner h2 { margin: 0 0 8px 0; font-size: 28px; font-weight: 800; }
     .scan-banner p { margin: 0 0 24px 0; font-size: 15px; opacity: 0.9; max-width: 420px; line-height: 1.5; }
     
-    .btn-white { 
-        background: white; color: var(--primary); padding: 12px 24px; border-radius: 8px; 
-        font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; 
-        gap: 8px; border: none; cursor: pointer; font-size: 15px; transition: background 0.2s;
-    }
+    .btn-white { background: white; color: var(--primary); padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; font-size: 15px; transition: background 0.2s; }
     .btn-white:hover { background: #f8fafc; }
-
     .btn-camera { background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.4); }
     .btn-camera:hover { background: rgba(255, 255, 255, 0.3); }
 
-    /* --- CAMERA MODAL CSS --- */
-    .camera-modal {
-        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; flex-direction: column;
-    }
-    .camera-container {
-        background: #000; border-radius: 16px; overflow: hidden; position: relative;
-        max-width: 90%; width: 700px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    }
+    /* Camera Modal */
+    .camera-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; }
+    .camera-container { background: #000; border-radius: 16px; overflow: hidden; position: relative; max-width: 90%; width: 700px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
     #webcam { width: 100%; display: block; transform: scaleX(-1); }
-    .camera-controls {
-        position: absolute; bottom: 20px; left: 0; width: 100%;
-        display: flex; justify-content: center; gap: 15px;
-    }
-    .btn-capture {
-        background: var(--primary); color: white; border: 2px solid white;
-        padding: 12px 30px; border-radius: 30px; font-weight: 800; cursor: pointer; font-size: 18px;
-        transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    }
+    .camera-controls { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; }
+    .btn-capture { background: var(--primary); color: white; border: 2px solid white; padding: 12px 30px; border-radius: 30px; font-weight: 800; cursor: pointer; font-size: 18px; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     .btn-capture:hover { transform: scale(1.05); }
-    .btn-close-cam {
-        background: #ef4444; color: white; border: none; padding: 12px 24px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 16px;
-    }
+    .btn-close-cam { background: #ef4444; color: white; border: none; padding: 12px 24px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 16px; }
 
     /* Stat Cards */
-    .stat-card { 
-        background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; 
-        padding: 24px; display: flex; flex-direction: column; justify-content: center;
-    }
+    .stat-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: center; }
     .stat-label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
     .stat-val { font-size: 36px; font-weight: 800; color: var(--text-main); margin: 0; line-height: 1; }
     .stat-sub { font-size: 14px; color: var(--text-muted); margin-top: 8px; }
 
     /* Middle Row */
     .middle-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
-    
-    .info-card {
-        background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px;
-        padding: 24px; display: flex; flex-direction: column;
-    }
+    .info-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; }
     .info-card h3 { margin: 0 0 16px 0; font-size: 20px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-    .info-card p { font-size: 15px; }
     
     /* Weather Alert */
-    .weather-alert {
-        background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; 
-        padding: 16px; border-radius: 12px; margin-top: auto; display: flex; gap: 12px; align-items: flex-start;
-    }
+    .weather-alert { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; padding: 16px; border-radius: 12px; margin-top: auto; display: flex; gap: 12px; align-items: flex-start; }
     [data-theme="dark"] .weather-alert { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); color: #FCD34D; }
 
     /* Forecast */
@@ -101,49 +49,38 @@
     .forecast-label { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
     .forecast-val { font-size: 26px; font-weight: 800; color: var(--text-main); }
 
-    /* Bottom Grid - Rebalanced */
+    /* Bottom Grid */
     .bottom-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
-    .section-title { 
-        font-size: 20px; font-weight: 700; margin: 0 0 16px 0; color: var(--text-main); 
-        display: flex; justify-content: space-between; align-items: center; gap: 12px; 
-    }
+    .section-title { font-size: 20px; font-weight: 700; margin: 0 0 16px 0; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
     .section-title a { font-size: 14px; color: var(--primary); text-decoration: none; font-weight: 600; white-space: nowrap; }
 
     /* Recent Scans */
     .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-    .recent-card { 
-        background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; 
-        padding: 16px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: 0.2s;
-    }
+    .recent-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: 0.2s; }
     .recent-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: var(--primary); }
     .recent-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; background: var(--bg-body); }
     .recent-info h4 { margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: var(--text-main); }
     .recent-info p { margin: 0; font-size: 13px; color: var(--text-muted); }
-    
     .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; margin-top: 6px; }
     .badge.green { background: #DEF7EC; color: #03543F; }
     .badge.red { background: #FDE8E8; color: #9B1C1C; }
     .badge.yellow { background: #FEF08A; color: #713F12; }
 
-    /* Expert Prescriptions (Moved to Left Column) */
-    .prescription-card {
-        background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;
-        padding: 20px; margin-bottom: 16px; transition: 0.2s;
-    }
+    /* Expert Prescriptions */
+    .prescription-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: 0.2s; }
     .prescription-card:hover { border-color: var(--primary); }
     .prescription-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; }
     .prescription-title { font-size: 16px; font-weight: 800; color: var(--text-main); margin: 0; line-height: 1.3; }
     .prescription-link { font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 700; white-space: nowrap; }
     .prescription-text { font-size: 14px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; }
-    .prescription-text strong { font-weight: 700; }
 
-    /* Active Crops & Treatments */
+    /* Active Crops */
     .crop-list { display: flex; flex-direction: column; gap: 12px; }
     .crop-item { display: flex; align-items: center; justify-content: space-between; padding: 14px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color); }
     .crop-name { font-weight: 700; color: var(--text-main); font-size: 15px; display: flex; align-items: center; gap: 8px;}
     .crop-status { font-size: 13px; font-weight: 600; color: var(--primary); background: var(--primary-light); padding: 4px 10px; border-radius: 6px; }
 
-    /* Disease Watch Widget */
+    /* Disease Watch */
     .disease-watch-item { display: flex; gap: 12px; padding: 14px; border-bottom: 1px solid var(--border-color); }
     .disease-watch-item:last-child { border-bottom: none; }
     .disease-icon { width: 40px; height: 40px; border-radius: 50%; background: #FEE2E2; color: #EF4444; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
@@ -157,7 +94,6 @@
     }
 </style>
 
-<!-- Top Row: Action + Stats -->
 <div class="top-row">
     <div class="scan-banner">
         <div style="z-index: 10;">
@@ -191,7 +127,6 @@
     </div>
 </div>
 
-<!-- Middle Row: Weather & Forecast -->
 <div class="middle-row">
     <div class="info-card">
         <h3><i class="bi bi-cloud-sun" style="color: #F59E0B;"></i> Weather & Disease Risk</h3>
@@ -237,12 +172,8 @@
     </div>
 </div>
 
-<!-- Bottom Row: Rebalanced Layout -->
 <div class="bottom-grid">
-    
-    <!-- Left Column: Recent Scans & Expert Prescriptions -->
     <div>
-        <!-- Recent Scans -->
         <div class="section-title">
             <span>Recent Diagnostics</span>
             <a href="{% url 'history' %}">View All History <i class="bi bi-arrow-right"></i></a>
@@ -275,7 +206,6 @@
             {% endfor %}
         </div>
 
-        <!-- Active Expert Prescriptions (Moved here) -->
         <div class="section-title" style="margin-top: 32px;">
             <span>Active Expert Prescriptions</span>
         </div>
@@ -304,7 +234,6 @@
                 {% endif %}
             </div>
             {% empty %}
-            <!-- Demo Fallback if empty -->
             <div class="prescription-card">
                 <div class="prescription-header">
                     <h4 class="prescription-title">
@@ -321,9 +250,7 @@
         </div>
     </div>
 
-    <!-- Right Column: Crops, Regional Watch, Treatment Plan -->
     <div>
-        <!-- My Active Crops -->
         <div class="section-title">
             <span>My Active Crops</span>
             <a href="{% url 'add_crop_cycle' %}" style="font-size: 24px; line-height: 1;" title="Add New Crop"><i class="bi bi-plus-circle-fill"></i></a>
@@ -347,7 +274,6 @@
             {% endfor %}
         </div>
 
-        <!-- Regional Disease Watch -->
         <div class="section-title">
             <span>Regional Disease Watch</span>
             <a href="{% url 'outbreak_map' %}">View Map <i class="bi bi-arrow-right"></i></a>
@@ -370,7 +296,6 @@
             </div>
         </div>
 
-        <!-- Active Treatment Plan (Moved to right column) -->
         <div class="section-title">
             <span>Treatment Tracker</span>
         </div>
@@ -391,10 +316,8 @@
             </div>
         </div>
     </div>
-
 </div>
 
-<!-- Camera Modal -->
 <div id="cameraModal" class="camera-modal">
     <div class="camera-container">
         <video id="webcam" autoplay playsinline></video>
@@ -415,9 +338,7 @@
     const form = document.getElementById('uploadForm');
 
     function submitForm() {
-        if (fileInput.files.length > 0) {
-            form.submit();
-        }
+        if (fileInput.files.length > 0) { form.submit(); }
     }
 
     async function openCamera() {
@@ -427,26 +348,20 @@
             videoElement.srcObject = stream;
         } catch (err) {
             alert("Unable to access camera. Please ensure you have given permission or are using HTTPS.");
-            console.error("Error accessing camera: ", err);
             closeCamera();
         }
     }
 
     function closeCamera() {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            stream = null;
-        }
+        if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
         modal.style.display = 'none';
     }
 
     function capturePhoto() {
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
-        
         canvas.width = videoElement.videoWidth;
         canvas.height = videoElement.videoHeight;
-        
         context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
         canvas.toBlob((blob) => {
@@ -454,11 +369,9 @@
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
             fileInput.files = dataTransfer.files;
-
             closeCamera();
             form.submit();
         }, 'image/jpeg', 0.9);
     }
 </script>
-
 {% endblock %}

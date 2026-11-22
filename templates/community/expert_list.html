@@ -38,7 +38,14 @@
         {% for expert in experts %}
         <div class="expert-card">
             <div class="expert-avatar">🧑‍🌾</div>
-            <h3 class="expert-name">Dr. {{ expert.user.username|slice:"3:"|title }}</h3>
+            <h3 class="expert-name">
+    Dr. 
+    {% if expert.user.first_name %}
+        {{ expert.user.first_name }} {{ expert.user.last_name }}
+    {% else %}
+        {{ expert.user.username|cut:"dr_"|cut:"Dr_"|cut:"_"|title }}
+    {% endif %}
+</h3>
             <p class="expert-spec">{{ expert.specialization }}</p>
             <p class="expert-exp">{{ expert.experience_years }} Years Experience</p>
             

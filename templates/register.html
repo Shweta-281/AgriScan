@@ -79,6 +79,29 @@
         background: var(--bg-surface);
     }
 
+    /* Error Styling */
+    .form-control.is-invalid {
+        border-color: #ef4444 !important;
+        background-color: #fef2f2 !important;
+    }
+    .error-text {
+        display: block;
+        color: #ef4444;
+        font-size: 13px;
+        margin-top: 6px;
+        font-weight: 500;
+    }
+    .global-error-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
     .btn-submit {
         width: 100%;
         background: var(--primary);
@@ -96,6 +119,17 @@
 
     .auth-footer { margin-top: 24px; text-align: center; font-size: 14px; color: var(--text-muted); }
     .auth-footer a { color: var(--primary); font-weight: 700; text-decoration: none; }
+
+    /* Agronomist Extra Fields Box */
+    #agronomist-fields {
+        display: none; /* Hidden by default */
+        background: rgba(5, 150, 105, 0.05);
+        border: 1px solid rgba(5, 150, 105, 0.2);
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    #agronomist-fields .form-group:last-child { margin-bottom: 0; }
     
     @media (max-width: 768px) {
         .auth-wrapper { flex-direction: column; margin: 20px; }
@@ -120,41 +154,132 @@
         <form method="POST">
             {% csrf_token %}
             
+            <!-- GLOBAL ERRORS -->
+            {% if form.non_field_errors %}
+                <div class="global-error-box">
+                    {% for error in form.non_field_errors %}
+                        <p>⚠️ {{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             <div class="form-group">
                 <label class="form-label">Register As</label>
                 {{ form.role }}
-                <!-- Applies the form-control styling to the role dropdown -->
                 <script>document.getElementById("id_role").classList.add("form-control");</script>
+                {% if form.role.errors %}<span class="error-text">⚠️ {{ form.role.errors.0 }}</span>{% endif %}
+            </div>
+
+            <!-- Hidden Agronomist Fields -->
+            <div id="agronomist-fields">
+                <div class="form-group">
+                    <label class="form-label">Specialization</label>
+                    {{ form.specialization }}
+                    <script>document.getElementById("id_specialization").classList.add("form-control");</script>
+                    {% if form.specialization.errors %}<span class="error-text">⚠️ {{ form.specialization.errors.0 }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Years of Experience</label>
+                    {{ form.experience_years }}
+                    <script>document.getElementById("id_experience_years").classList.add("form-control");</script>
+                    {% if form.experience_years.errors %}<span class="error-text">⚠️ {{ form.experience_years.errors.0 }}</span>{% endif %}
+                </div>
+            </div>
+
+            <!-- NEW: First Name & Last Name Side-by-Side -->
+            <div style="display: flex; gap: 16px; margin-bottom: 20px;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label class="form-label">First Name</label>
+                    {{ form.first_name }}
+                    <script>
+                        const fnInput = document.getElementById("id_first_name");
+                        fnInput.classList.add("form-control");
+                        {% if form.first_name.errors %}fnInput.classList.add("is-invalid");{% endif %}
+                    </script>
+                    {% if form.first_name.errors %}
+                        <span class="error-text">⚠️ {{ form.first_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label class="form-label">Last Name</label>
+                    {{ form.last_name }}
+                    <script>
+                        const lnInput = document.getElementById("id_last_name");
+                        lnInput.classList.add("form-control");
+                        {% if form.last_name.errors %}lnInput.classList.add("is-invalid");{% endif %}
+                    </script>
+                    {% if form.last_name.errors %}
+                        <span class="error-text">⚠️ {{ form.last_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Username</label>
                 {{ form.username }}
-                <script>document.getElementById("id_username").classList.add("form-control"); document.getElementById("id_username").placeholder = "Choose a username";</script>
+                <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px; display: block;">
+                    Used for logging in. No spaces allowed.
+                </span>
+                <script>
+                    const usernameInput = document.getElementById("id_username");
+                    usernameInput.classList.add("form-control");
+                    {% if form.username.errors %}usernameInput.classList.add("is-invalid");{% endif %}
+                </script>
+                {% if form.username.errors %}
+                    <span class="error-text">⚠️ {{ form.username.errors.0 }}</span>
+                {% endif %}
             </div>
             
             <div class="form-group">
                 <label class="form-label">Email Address</label>
                 {{ form.email }}
-                <script>document.getElementById("id_email").classList.add("form-control"); document.getElementById("id_email").placeholder = "Enter your email";</script>
+                <script>
+                    const emailInput = document.getElementById("id_email");
+                    emailInput.classList.add("form-control");
+                    {% if form.email.errors %}emailInput.classList.add("is-invalid");{% endif %}
+                </script>
+                {% if form.email.errors %}
+                    <span class="error-text">⚠️ {{ form.email.errors.0 }}</span>
+                {% endif %}
             </div>
 
             <div class="form-group">
                 <label class="form-label">Phone Number</label>
                 {{ form.phone }}
-                <script>document.getElementById("id_phone").classList.add("form-control"); document.getElementById("id_phone").placeholder = "Enter your mobile number";</script>
+                <script>
+                    const phoneInput = document.getElementById("id_phone");
+                    phoneInput.classList.add("form-control");
+                    {% if form.phone.errors %}phoneInput.classList.add("is-invalid");{% endif %}
+                </script>
+                {% if form.phone.errors %}
+                    <span class="error-text">⚠️ {{ form.phone.errors.0 }}</span>
+                {% endif %}
             </div>
             
             <div class="form-group">
                 <label class="form-label">Password</label>
                 {{ form.password1 }}
-                <script>document.getElementById("id_password1").classList.add("form-control"); document.getElementById("id_password1").placeholder = "Create a password";</script>
+                <script>
+                    const pass1Input = document.getElementById("id_password1");
+                    pass1Input.classList.add("form-control");
+                    {% if form.password1.errors %}pass1Input.classList.add("is-invalid");{% endif %}
+                </script>
+                {% if form.password1.errors %}
+                    <span class="error-text">⚠️ {{ form.password1.errors.0 }}</span>
+                {% endif %}
             </div>
             
             <div class="form-group">
                 <label class="form-label">Confirm Password</label>
                 {{ form.password2 }}
-                <script>document.getElementById("id_password2").classList.add("form-control"); document.getElementById("id_password2").placeholder = "Confirm your password";</script>
+                <script>
+                    const pass2Input = document.getElementById("id_password2");
+                    pass2Input.classList.add("form-control");
+                    {% if form.password2.errors %}pass2Input.classList.add("is-invalid");{% endif %}
+                </script>
+                {% if form.password2.errors %}
+                    <span class="error-text">⚠️ {{ form.password2.errors.0 }}</span>
+                {% endif %}
             </div>
 
             <button type="submit" class="btn-submit">Create Account →</button>
@@ -165,5 +290,27 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript Toggle for Agronomist Fields -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleSelect = document.getElementById('id_role');
+        const agronomistFields = document.getElementById('agronomist-fields');
+
+        function toggleFields() {
+            if (roleSelect.value === 'agronomist') {
+                agronomistFields.style.display = 'block';
+            } else {
+                agronomistFields.style.display = 'none';
+            }
+        }
+
+        // Run on page load
+        toggleFields();
+
+        // Run on change
+        roleSelect.addEventListener('change', toggleFields);
+    });
+</script>
 
 {% endblock %}

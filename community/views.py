@@ -5,7 +5,6 @@ from django.utils import timezone
 from accounts.models import User, AgronomistProfile
 from .models import ExpertConsultation, ForumPost, ForumComment
 from detector.models import PredictionLog
-from marketplace.models import Product
 
 # --- EXPERT & CONSULTATION VIEWS ---
 
@@ -14,9 +13,9 @@ def expert_list(request):
     if request.user.role != 'farmer':
         return redirect('home')
     
+    # Fetch all agronomists. Because we now create profiles on registration, new Drs will show up!
     experts = AgronomistProfile.objects.select_related('user').all()
     
-    # Catch the disease and scan_id passed from the result page
     disease_context = request.GET.get('disease', '')
     scan_id = request.GET.get('scan_id', '')
     
@@ -73,12 +72,14 @@ def agronomist_dashboard(request):
     if request.user.role != 'agronomist':
         return redirect('home') 
         
+    # 1. Fetch AI cases that need review
     escalated_cases = PredictionLog.objects.filter(confidence__lt=70).order_by('-date_uploaded')
     
     crop_filter = request.GET.get('crop')
     if crop_filter:
         escalated_cases = escalated_cases.filter(predicted_disease__icontains=crop_filter)
         
+    # 2. Fetch Consultations booked with THIS specific expert
     consultations = ExpertConsultation.objects.filter(agronomist=request.user).order_by('-id')
     
     context = {
@@ -89,7 +90,9 @@ def agronomist_dashboard(request):
     }
     return render(request, 'community/agronomist_dashboard.html', context)
 
+@login_required
 def review_case(request, pk):
+    # Added @login_required for security
     case = get_object_or_404(PredictionLog, id=pk)
     
     if request.method == 'POST':
@@ -105,6 +108,7 @@ def review_case(request, pk):
         return redirect('agronomist_dashboard')
         
     return render(request, 'community/review_case.html', {'case': case})
+
 @login_required
 def delete_triage_case(request, pk):
     if request.user.role != 'agronomist':

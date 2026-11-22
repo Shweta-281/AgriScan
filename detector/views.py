@@ -16,13 +16,14 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
+from accounts.models import AgronomistProfile, FarmerProfile, User
+
 # Project Imports
 from .models import PredictionLog, Disease, MarketPrice, CropCycle, TreatmentPlan, Crop
 from .forms import CropCycleForm 
 from .gradcam import generate_gradcam
 from .predictor import AgriPredictor
 from analytics.utils import send_sms, get_disease_risk_alert
-from marketplace.models import Product, Order
 from community.models import ExpertConsultation, ForumPost
 
 # Load AI Model
@@ -40,13 +41,10 @@ except Exception as e:
 
 def upload_image(request):
     """Main Dashboard and Scan Upload View"""
-    # 1. Role-based redirects
     if request.user.is_authenticated:
-        if request.user.role == 'seller': return redirect('seller_dashboard')
-        elif request.user.role == 'agronomist': return redirect('agronomist_dashboard')
+        if request.user.role == 'agronomist': return redirect('agronomist_dashboard')
         elif request.user.role == 'admin' or request.user.is_superuser: return redirect('admin_dashboard')
 
-    # 2. Handle POST (Image Upload & AI Processing)
     if request.method == 'POST' and request.FILES.get('leaf_image'):
         if not request.user.is_authenticated: 
             return redirect('login') 
@@ -55,7 +53,6 @@ def upload_image(request):
         if AI_MODEL is None: 
             return render(request, 'error.html', {'error': 'AI Model not loaded.'})
             
-        # --- 1. RUN AI PREDICTION FIRST ---
         temp_log = PredictionLog(
             user=request.user, 
             image=uploaded_file,
@@ -71,7 +68,6 @@ def upload_image(request):
         result = AI_MODEL.predict(file_path)
         severity = AI_MODEL.calculate_severity(file_path)
         
-        # Clean Name String
         raw_name = result["top_prediction"]
         if '___' in raw_name:
             crop, disease = raw_name.split('___', 1)
@@ -81,7 +77,6 @@ def upload_image(request):
         else:
             clean_name = raw_name.replace('_', ' ').title()
 
-        # Normalize alternatives
         alt_list = []
         if "alternatives" in result and result["alternatives"]:
             for alt in result["alternatives"]:
@@ -102,13 +97,11 @@ def upload_image(request):
                     'confidence': round(float(conf), 2)
                 })
 
-        # --- 2. GET LOCATION FROM FARMER PROFILE ---
         scan_lat, scan_lng = None, None
         if hasattr(request.user, 'farmer_profile'):
             scan_lat = request.user.farmer_profile.latitude
             scan_lng = request.user.farmer_profile.longitude
 
-        # --- 3. UPDATE DATABASE RECORD WITH RESULTS ---
         temp_log.predicted_disease = clean_name
         temp_log.confidence = round(result["confidence"], 2)
         temp_log.alternatives = alt_list 
@@ -117,7 +110,6 @@ def upload_image(request):
         temp_log.scan_latitude = scan_lat
         temp_log.scan_longitude = scan_lng
         
-        # Link to Disease database if it exists
         try:
             disease_obj = Disease.objects.get(name__iexact=clean_name)
             temp_log.disease = disease_obj
@@ -125,23 +117,19 @@ def upload_image(request):
             pass
             
         temp_log.save()
-        log = temp_log # Rename for the rest of the view
+        log = temp_log
         
-        # --- 4. GENERATE GRAD-CAM HEATMAP ---
         gradcam_filename = f"heatmap_{filename}"
         gradcam_path = os.path.join(settings.MEDIA_ROOT, 'uploads', gradcam_filename)
         heatmap_success = generate_gradcam(file_path, gradcam_path)
         if not os.path.exists(gradcam_path): 
             heatmap_success = False
         
-        # --- 5. SMS ALERT ---
         if request.user.phone and not result["is_ood"]:
             send_sms(request.user.phone, f"AgriScan Alert: Your crop has been diagnosed with {clean_name} ({log.confidence}% confidence).")
         
-        # --- 6. FETCH DISEASE INFO (For the result page) ---
-        disease_info = log.disease # Use the linked disease object
+        disease_info = log.disease 
         if not disease_info:
-            # Fallback if not in DB
             disease_info = Disease(
                 name=clean_name,
                 description=f"The AI has detected symptoms consistent with {clean_name}. Detailed agronomic data for this specific strain is currently being updated in our database.",
@@ -150,20 +138,15 @@ def upload_image(request):
                 dosage_instructions="Follow the manufacturer's instructions on the fungicide label. Typically 2-3 ml per liter of water.",
                 safety_advisory="Always wear protective gear (gloves, mask) when applying chemical treatments."
             )
-            
-        search_keyword = clean_name.split()[-1]
-        recommended_products = Product.objects.filter(name__icontains=search_keyword)[:3]
 
         return render(request, 'result.html', {
             'log': log, 
             'disease': disease_info, 
-            'recommended_products': recommended_products,
             'gradcam_image': f"{settings.MEDIA_URL}uploads/{gradcam_filename}" if heatmap_success else None,
             'original_image_url': log.image.url if log.image else None, 
             'needs_review': result.get("needs_review", False)
         })
         
-    # 3. Handle GET (Dashboard Rendering)
     if request.user.is_authenticated:
         recent_scans = PredictionLog.objects.filter(user=request.user).order_by('-date_uploaded')[:3]
         all_user_scans = PredictionLog.objects.filter(user=request.user)
@@ -172,10 +155,8 @@ def upload_image(request):
         diseased_count = total_scans - healthy_count
         active_crops = CropCycle.objects.filter(farmer=request.user, is_active=True)[:3]
         
-        # Fetch active treatments (FIX: Added this back)
         active_treatments = TreatmentPlan.objects.filter(farmer=request.user, is_completed=False)[:3]
         
-        # Fetch the latest verified prescriptions for this farmer
         verified_prescriptions = PredictionLog.objects.filter(
             user=request.user, 
             review_status='verified'
@@ -189,7 +170,6 @@ def upload_image(request):
         active_treatments = []
         verified_prescriptions = []
 
-    top_products = Product.objects.all().order_by('?')[:3] 
     try: 
         latest_post = ForumPost.objects.order_by('-id').first()
     except: 
@@ -197,25 +177,6 @@ def upload_image(request):
         
     weather_alert = get_disease_risk_alert()
 
-    # Market Price Logic
-    market_data = []
-    try:
-        unique_crops = MarketPrice.objects.values_list('crop_name', flat=True).distinct()[:3]
-        for crop in unique_crops:
-            latest_price = MarketPrice.objects.filter(crop_name=crop).order_by('-date').first()
-            avg_price = MarketPrice.objects.filter(crop_name=crop).aggregate(Avg('price_per_quintal'))['price_per_quintal__avg']
-            if latest_price and avg_price:
-                recommendation, color = "Hold", "#F59E0B"
-                avg_f, latest_f = float(avg_price), float(latest_price.price_per_quintal)
-                if latest_f > avg_f * 1.05: 
-                    recommendation, color = "Sell Now", "#10B981"
-                elif latest_f < avg_f * 0.95: 
-                    recommendation, color = "Wait", "#EF4444"
-                market_data.append({'crop': crop, 'price': f"{latest_f:.0f}", 'recommendation': recommendation, 'color': color})
-    except Exception as e: 
-        print(f"Market error: {e}")
-
-    # YIELD FORECAST ENGINE
     forecast = {'yield_estimate': 0, 'revenue_estimate': 0, 'health_score': 0}
     if request.user.is_authenticated and active_crops:
         crop = active_crops[0]
@@ -236,7 +197,6 @@ def upload_image(request):
 
     return render(request, 'upload.html', {
         'recent_scans': recent_scans, 
-        'top_products': top_products, 
         'latest_post': latest_post,
         'total_scans': total_scans, 
         'healthy_count': healthy_count, 
@@ -245,7 +205,6 @@ def upload_image(request):
         'active_treatments': active_treatments,
         'verified_prescriptions': verified_prescriptions,
         'weather_alert': weather_alert, 
-        'market_data': market_data, 
         'forecast': forecast,
     })    
 
@@ -254,22 +213,13 @@ def notifications_api(request):
         return JsonResponse({'count': 0, 'messages': []})
         
     notif_messages = []
-    
     if request.user.role == 'farmer':
-        verified_scans = PredictionLog.objects.filter(
-            user=request.user, 
-            review_status='verified'
-        ).order_by('-date_uploaded')[:5]
-        
+        verified_scans = PredictionLog.objects.filter(user=request.user, review_status='verified').order_by('-date_uploaded')[:5]
         for scan in verified_scans:
             notif_messages.append(f"✅ Expert verified your scan for {scan.predicted_disease}.")
             
     elif request.user.role == 'agronomist':
-        pending_scans = PredictionLog.objects.filter(
-            confidence__lt=70, 
-            review_status='pending'
-        ).order_by('-date_uploaded')[:5]
-        
+        pending_scans = PredictionLog.objects.filter(confidence__lt=70, review_status='pending').order_by('-date_uploaded')[:5]
         for scan in pending_scans:
             notif_messages.append(f"⚠️ New low-confidence scan from {scan.user.username} needs review.")
             
@@ -281,15 +231,12 @@ def outbreak_map(request):
 
 
 def outbreak_data(request):
-    # 1. Fetch real scans that have location data
     real_logs = PredictionLog.objects.exclude(is_ood=True)\
                                      .exclude(predicted_disease__icontains='healthy')\
                                      .exclude(scan_latitude=None)\
                                      .order_by('-date_uploaded')[:20]
     
     data = []
-    
-    # Add REAL data from your database
     for l in real_logs:
         data.append({
             'lat': l.scan_latitude, 
@@ -300,7 +247,6 @@ def outbreak_data(request):
             'date': l.date_uploaded.strftime('%d %b %Y')
         })
 
-    # 2. ADD DEMO DATA (So the map always looks populated for your teacher)
     demo_maharashtra = [
         {"lat": 19.0760, "lng": 72.8777, "disease": "Grape Downy Mildew", "confidence": 92.5, "farmer": "raj_patil", "date": "22 Nov 2026"},
         {"lat": 18.5204, "lng": 73.8567, "disease": "Tomato Late Blight", "confidence": 88.1, "farmer": "amit_shinde", "date": "21 Nov 2026"},
@@ -309,13 +255,11 @@ def outbreak_data(request):
         {"lat": 17.6599, "lng": 75.9064, "disease": "Sugarcane Red Rot", "confidence": 84.0, "farmer": "vikas_jadhav", "date": "19 Nov 2026"},
         {"lat": 20.9320, "lng": 77.7523, "disease": "Soybean Rust", "confidence": 81.2, "farmer": "prakash_more", "date": "18 Nov 2026"}
     ]
-
     demo_punjab = [
         {"lat": 30.9010, "lng": 75.8573, "disease": "Wheat Yellow Rust", "confidence": 91.2, "farmer": "gurpreet_singh", "date": "22 Nov 2026"},
         {"lat": 31.6340, "lng": 74.8723, "disease": "Corn Common Rust", "confidence": 89.5, "farmer": "harpreet_kaur", "date": "21 Nov 2026"},
         {"lat": 30.2110, "lng": 74.9455, "disease": "Cotton Leaf Curl Virus", "confidence": 78.6, "farmer": "manpreet_singh", "date": "20 Nov 2026"},
     ]
-
     data.extend(demo_maharashtra)
     data.extend(demo_punjab)
     
@@ -337,9 +281,10 @@ def admin_dashboard(request):
         return redirect('home')
     User = get_user_model()
     return render(request, 'admin_dashboard.html', {
-        'total_scans': PredictionLog.objects.count(), 
+        'total_scans': PredictionLog.objects.count(),
         'total_users': User.objects.count(),
-        'total_orders': Order.objects.count(), 
+        'total_profiles': FarmerProfile.objects.count() + AgronomistProfile.objects.count(),
+        'total_crop_cycles': CropCycle.objects.count(),
         'total_consultations': ExpertConsultation.objects.count(),
         'common_diseases': PredictionLog.objects.values('predicted_disease').annotate(count=Count('predicted_disease')).order_by('-count')[:5],
         'recent_scans': PredictionLog.objects.order_by('-id')[:5],
@@ -357,11 +302,8 @@ def scan_detail(request, pk):
         generate_gradcam(log.image.path, gradcam_path)
     heatmap_success = os.path.exists(gradcam_path)
     
-    # Use the direct link to the Disease model we created
     disease_info = log.disease 
-    
     if not disease_info:
-        # Fallback if the linked disease is null
         disease_info = Disease(
             name=log.predicted_disease, 
             description=f"The AI has detected symptoms consistent with {log.predicted_disease}. Detailed agronomic data for this specific strain is currently being updated in our database.",
@@ -374,7 +316,6 @@ def scan_detail(request, pk):
     return render(request, 'result.html', {
         'log': log, 
         'disease': disease_info, 
-        'recommended_products': Product.objects.filter(name__icontains=log.predicted_disease.split()[-1])[:3],
         'gradcam_image': f"{settings.MEDIA_URL}uploads/{gradcam_filename}" if heatmap_success else None, 
         'original_image_url': log.image.url if log.image else None,
     })
@@ -403,19 +344,15 @@ def add_crop_cycle(request):
         form = CropCycleForm(request.POST)
         if form.is_valid():
             crop_name = form.cleaned_data['crop_name'].strip().title()
-            
-            # Automatically create the crop if it doesn't exist
             crop_obj, created = Crop.objects.get_or_create(
                 name=crop_name, 
-                defaults={'season': 'Unknown'} # Default value if new
+                defaults={'season': 'Unknown'}
             )
-            
             cycle = form.save(commit=False)
             cycle.farmer = request.user
-            cycle.crop = crop_obj # Link the created/found crop
+            cycle.crop = crop_obj
             cycle.is_active = True
             cycle.save()
-            
             messages.success(request, f"🌱 {crop_name} crop cycle added successfully!")
             return redirect('home')
     else: 
@@ -425,7 +362,6 @@ def add_crop_cycle(request):
 def download_report(request, pk):
     log = get_object_or_404(PredictionLog, id=pk, user=request.user)
     
-    # Use direct link if available, else fallback
     disease = log.disease
     if not disease:
         try: 
@@ -484,3 +420,92 @@ def download_report(request, pk):
     doc.build(elements)
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename=f"AgriScan_Report_{log.id}.pdf")
+
+import csv
+from django.http import HttpResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
+def export_admin_data(request, data_type, file_format):
+    # 1. Ensure only admins can export
+    if not request.user.is_authenticated or (request.user.role != 'admin' and not request.user.is_superuser):
+        return redirect('home')
+
+    # 2. Define the data based on the requested type
+    if data_type == 'users':
+        title = "System Users"
+        headers = ['Username', 'Email', 'Role', 'Phone', 'Joined']
+        data = [[u.username, u.email, u.role, u.phone, u.date_joined.strftime('%Y-%m-%d')] for u in User.objects.all()]
+        
+    elif data_type == 'farmers':
+        title = "Farmer Profiles"
+        headers = ['Username', 'Location', 'Farm Size (Acres)', 'Soil Type']
+        data = [[f.user.username, f.location, f.farm_size_acres, f.soil_type] for f in FarmerProfile.objects.all()]
+        
+    elif data_type == 'experts':
+        title = "Expert Profiles"
+        headers = ['Username', 'Specialization', 'Experience (Yrs)', 'Consultation Fee']
+        data = [[e.user.username, e.specialization, e.experience_years, e.consultation_fee] for e in AgronomistProfile.objects.all()]
+        
+    elif data_type == 'crops':
+        title = "Active Crop Cycles"
+        headers = ['Farmer', 'Crop Name', 'Sowing Date', 'Status']
+        data = [[c.farmer.username, c.crop.name, c.sowing_date.strftime('%Y-%m-%d'), 'Active' if c.is_active else 'Inactive'] for c in CropCycle.objects.all()]
+        
+    elif data_type == 'diseases':
+        title = "Disease Catalog"
+        headers = ['Disease Name', 'Treatment', 'Prevention']
+        data = [[d.name, d.treatment[:50] + '...', d.prevention[:50] + '...'] for d in Disease.objects.all()]
+        
+    elif data_type == 'predictions':
+        title = "AI Prediction Logs"
+        headers = ['Scan ID', 'Farmer', 'Predicted Disease', 'Confidence', 'Severity', 'Date']
+        data = [[str(p.id), p.user.username, p.predicted_disease, f"{p.confidence}%", f"{p.severity}%", p.date_uploaded.strftime('%Y-%m-%d')] for p in PredictionLog.objects.all()]
+        
+    elif data_type == 'forum':
+        title = "Community Forum Posts"
+        headers = ['Author', 'Title', 'Created At']
+        data = [[post.author.username, post.title, post.created_at.strftime('%Y-%m-%d')] for post in ForumPost.objects.all()]
+    else:
+        return redirect('admin_dashboard')
+
+    # 3. Generate PDF
+    if file_format == 'pdf':
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{title}.pdf"'
+        
+        doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        elements.append(Paragraph(f"AgriScan Admin Export - {title}", styles['Heading1']))
+        
+        table_data = [headers] + data
+        t = Table(table_data)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#059669")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#F9FAFB")),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#E5E7EB")),
+        ]))
+        elements.append(t)
+        doc.build(elements)
+        return response
+
+    # 4. Generate CSV (Excel)
+    elif file_format == 'excel':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{title}.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(headers)
+        writer.writerows(data)
+        return response
+
+    return redirect('admin_dashboard')
